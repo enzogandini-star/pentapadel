@@ -1,1 +1,569 @@
-<!DOCTYPE html>\n<html lang="en">\n<head>\n    <meta charset="UTF-8">\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n    <title>Penta Padel</title>\n    <style>\n        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }\n        h1 { color: #333; }\n        .container { width: 80%; margin: auto; overflow: hidden; }\n        #login-form, #tournament-management, #player-database { margin: 20px 0; padding: 20px; background: #fff; border-radius: 5px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }\n        input[type='text'], input[type='password'] { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; }\n        .button { background-color: #28a745; color: white; padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; }\n        .button:hover { background-color: #218838; }\n    </style>\n</head>\n<body>\n    <div class="container">\n        <h1>Penta Padel Application</h1>\n\n        <div id="login-form">\n            <h2>Login</h2>\n            <input type="text" id="username" placeholder="Username">\n            <input type="password" id="password" placeholder="Password">\n            <button class="button" onclick="login()">Login</button>\n        </div>\n\n        <div id="tournament-management">\n            <h2>Tournament Management</h2>\n            <input type="text" id="tournament-name" placeholder="Tournament Name">\n            <button class="button" onclick="createTournament()">Create Tournament</button>\n            <div id="tournament-list"></div>\n        </div>\n\n        <div id="player-database">\n            <h2>Player Database</h2>\n            <input type="text" id="player-name" placeholder="Player Name">\n            <button class="button" onclick="addPlayer()">Add Player</button>\n            <div id="player-list"></div>\n        </div>\n    </div>\n\n    <script>\n        let players = [];\n        let tournaments = [];\n\n        function login() {\n            const username = document.getElementById('username').value;\n            const password = document.getElementById('password').value;\n            // Add authentication logic here (dummy implementation)\n            if (username === 'admin' && password === 'password') {\n                alert('Login successful!');\n            } else {\n                alert('Invalid credentials');\n            }\n        }\n\n        function createTournament() {\n            const tournamentName = document.getElementById('tournament-name').value;\n            if (tournamentName) {\n                tournaments.push(tournamentName);\n                document.getElementById('tournament-name').value = '';\n                updateTournamentList();\n            } else {\n                alert('Please enter a tournament name');\n            }\n        }\n\n        function updateTournamentList() {\n            const list = document.getElementById('tournament-list');\n            list.innerHTML = '';\n            tournaments.forEach((tournament, index) => {\n                list.innerHTML += '<div>' + tournament + ' <button onclick="deleteTournament(' + index + ')">Delete</button></div>';\n            });\n        }\n\n        function deleteTournament(index) {\n            tournaments.splice(index, 1);\n            updateTournamentList();\n        }\n\n        function addPlayer() {\n            const playerName = document.getElementById('player-name').value;\n            if (playerName) {\n                players.push(playerName);\n                document.getElementById('player-name').value = '';\n                updatePlayerList();\n            } else {\n                alert('Please enter a player name');\n            }\n        }\n\n        function updatePlayerList() {\n            const list = document.getElementById('player-list');\n            list.innerHTML = '';\n            players.forEach((player) => {\n                list.innerHTML += '<div>' + player + '</div>';\n            });\n        }\n    <\/script>\n</body>\n</html>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Penta Padel</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Arial Narrow', Arial, sans-serif; background: #0d1117; color: #c9d1d9; min-height: 100vh; }
+
+/* NAV */
+.nav { background: #161b22; border-bottom: 1px solid #30363d; padding: 8px 16px; display: flex; align-items: center; gap: 10px; }
+.nav h1 { font-size: 17px; color: #58a6ff; flex: 1; }
+.nav-btn { background: none; border: 1px solid #30363d; color: #8b949e; padding: 5px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+.nav-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+.nav-btn.active { background: #1f6feb; border-color: #1f6feb; color: #fff; }
+
+/* VIEWS */
+.view { display: none; padding: 16px; }
+.view.active { display: block; }
+
+/* SETUP */
+h2 { font-size: 15px; color: #58a6ff; margin-bottom: 12px; }
+h3 { font-size: 12px; color: #8b949e; margin: 14px 0 6px; text-transform: uppercase; letter-spacing: .5px; }
+.setup-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 7px; max-width: 720px; }
+.setup-row { display: flex; align-items: center; gap: 7px; }
+.seed-badge { background: #1f6feb; color: #fff; border-radius: 4px; padding: 2px 7px; font-size: 11px; min-width: 32px; text-align: center; font-weight: bold; }
+.seed-bye { background: #2d333b; }
+.team-input { flex: 1; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 6px 8px; border-radius: 5px; font-size: 13px; }
+.team-input:focus { outline: none; border-color: #58a6ff; }
+.btn { background: #238636; border: none; color: #fff; padding: 7px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; margin-top: 12px; }
+.btn:hover { background: #2ea043; }
+.btn-blue { background: #1f6feb; }
+.btn-blue:hover { background: #388bfd; }
+.btn-red { background: #da3633; margin-left: 8px; }
+.btn-red:hover { background: #f85149; }
+.info-box { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #8b949e; max-width: 480px; margin-bottom: 14px; line-height: 1.6; }
+.info-box strong { color: #c9d1d9; }
+
+/* BRACKET */
+.bracket-outer { padding: 10px 16px 16px; overflow-x: auto; }
+.bracket-labels { display: flex; width: fit-content; margin-bottom: 4px; }
+.round-label { text-align: center; font-size: 10px; color: #484f58; text-transform: uppercase; letter-spacing: 1px; font-weight: bold; }
+.bracket-pos { position: relative; }
+.match-card { position: absolute; border: 1px solid #30363d; border-radius: 5px; overflow: hidden; background: #161b22; cursor: pointer; }
+.match-card:hover { border-color: #58a6ff; }
+.team-slot { display: flex; justify-content: space-between; align-items: center; padding: 0 7px; font-size: 11px; border-bottom: 1px solid #21262d; white-space: nowrap; overflow: hidden; }
+.team-slot:last-child { border-bottom: none; }
+.team-slot:hover { background: #21262d; }
+.team-slot.winner { background: #0d2a0d; color: #3fb950; }
+.team-slot.loser { color: #484f58; }
+.team-slot.bye-slot { color: #484f58; font-style: italic; pointer-events: none; }
+.t-name { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.t-score { font-weight: bold; font-size: 12px; color: #58a6ff; min-width: 18px; text-align: right; padding-left: 4px; }
+.match-round-tag { position: absolute; bottom: -1px; right: 3px; font-size: 8px; color: #484f58; pointer-events: none; }
+.champion-banner { position: absolute; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.champion-inner { background: #161b22; border: 2px solid #d4af37; border-radius: 8px; padding: 8px 12px; text-align: center; min-width: 120px; }
+.champion-cup { font-size: 20px; }
+.champion-label { font-size: 9px; color: #d4af37; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+.champion-name { font-size: 12px; color: #d4af37; font-weight: bold; margin-top: 3px; max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.champion-name.tbd { color: #484f58; font-style: italic; font-weight: normal; }
+
+/* MATCHES VIEW */
+.round-section { margin-bottom: 18px; }
+.matches-list { display: flex; flex-direction: column; gap: 6px; max-width: 620px; }
+.match-row { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 12px; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.m-team { font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.m-team.right { text-align: right; }
+.m-team.winner-t { color: #3fb950; font-weight: bold; }
+.m-team.loser-t { color: #484f58; }
+.m-center { display: flex; gap: 5px; align-items: center; }
+.score-input { width: 36px; background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 4px 5px; border-radius: 4px; text-align: center; font-size: 13px; font-weight: bold; }
+.score-input:focus { outline: none; border-color: #58a6ff; }
+.score-sep { color: #484f58; font-size: 14px; }
+.m-status { font-size: 10px; color: #484f58; text-align: center; }
+.btn-set { background: #1f6feb; border: none; color: #fff; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; }
+.btn-set:hover { background: #388bfd; }
+.tbd-row { opacity: .4; pointer-events: none; }
+.bye-row { opacity: .5; }
+.bye-badge { background: #2d333b; color: #8b949e; border-radius: 3px; padding: 2px 6px; font-size: 10px; }
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <h1>🎾 Penta Padel</h1>
+  <button class="nav-btn active" id="nav-setup" onclick="showView('setup')">Equipos</button>
+  <button class="nav-btn" id="nav-bracket" onclick="showView('bracket')">Bracket</button>
+  <button class="nav-btn" id="nav-matches" onclick="showView('matches')">Partidos</button>
+</div>
+
+<div id="view-setup" class="view active">
+  <h2>Configurar Equipos</h2>
+  <div class="info-box">
+    <strong>Bracket de 10 parejas:</strong><br>
+    • Seeds <strong>1–6</strong> → BYE directo a Cuartos<br>
+    • Seeds <strong>7–10</strong> juegan Octavos (2 partidos)<br>
+    • Cuartos: 4 partidos · Semis: 2 partidos · Final: 1 partido
+  </div>
+  <div class="setup-grid" id="team-inputs"></div>
+  <br>
+  <button class="btn btn-blue" onclick="generateBracket()">Generar Bracket ▶</button>
+  <button class="btn btn-red" onclick="resetAll()">Reset</button>
+</div>
+
+<div id="view-bracket" class="view">
+  <h2>Bracket del Torneo</h2>
+  <div class="bracket-outer">
+    <div class="bracket-labels" id="bracket-labels"></div>
+    <div class="bracket-pos" id="bracket-pos">
+      <svg id="bracket-svg" style="position:absolute;top:0;left:0;pointer-events:none;overflow:visible;"></svg>
+    </div>
+  </div>
+</div>
+
+<div id="view-matches" class="view">
+  <h2>Partidos</h2>
+  <div id="matches-container"></div>
+</div>
+
+<script>
+// ─── CONSTANTS ───────────────────────────────────────────────
+const N = 10;
+
+// Layout constants (all px)
+const SH = 48;          // slot height (one team row)
+const CH = SH * 2;      // card height (2 team rows)
+const CW = 128;         // card width
+const GH = 24;          // horizontal gap between columns
+const COL_STEP = CW + GH;
+
+// 7 columns: OCT_L | Q_L | S_L | F | S_R | Q_R | OCT_R
+const COL = [0,1,2,3,4,5,6].map(i => i * COL_STEP);
+const TOTAL_W = COL[6] + CW;
+// Bracket height: 4 slots per side (Q×2 = 4 teams → 4 rows = 4*SH)
+// But we display Q1 at y=0, Q2 at y=CH, so total = 2*CH = 4*SH
+const TOTAL_H = 2 * CH;
+
+// Vertical positions (y = top of match card):
+//   Q1 center_y = CH/2 = SH      (card at y=0)
+//   Q2 center_y = CH+CH/2 = 3*SH (card at y=CH)
+//   S center_y = (SH + 3*SH)/2 = 2*SH  → card top = 2*SH - SH = SH
+//   F center_y = 2*SH             → card top = SH
+//   Oct_L at y=0 (same column as left, feeds Q1 bottom slot)
+//   Oct_R at y=0 (same column as right, feeds Q3 bottom slot)
+
+const Y = {
+  OCT_L: 0,
+  Q1:    0,
+  Q2:    CH,
+  S1:    SH,
+  F1:    SH,
+  S2:    SH,
+  Q3:    0,
+  Q4:    CH,
+  OCT_R: 0,
+};
+
+// ─── SEEDING LOGIC ───────────────────────────────────────────
+// 10 teams (0-indexed seeds 0–9 = ranks 1–10):
+//   Byes (direct to Cuartos): seeds 0–5 (ranks 1–6)
+//   Octavos: seeds 6–9 (ranks 7–10)
+//
+//   Oct L: seed[6] vs seed[9]  (rank7 vs rank10)
+//   Oct R: seed[7] vs seed[8]  (rank8 vs rank9)
+//
+//   Q1 (col1 top):    seed[0] vs winner(Oct_L)     [rank1 vs winner7v10]
+//   Q2 (col1 bot):    seed[3] vs seed[4]            [rank4 vs rank5]
+//   Q3 (col5 top):    seed[1] vs winner(Oct_R)     [rank2 vs winner8v9]
+//   Q4 (col5 bot):    seed[2] vs seed[5]            [rank3 vs rank6]
+//
+//   S1: winner(Q1) vs winner(Q2)
+//   S2: winner(Q3) vs winner(Q4)
+//   F1: winner(S1) vs winner(S2)
+
+// ─── STATE ───────────────────────────────────────────────────
+let state = {
+  teams: Array.from({length: N}, (_, i) => `Pareja ${i+1}`),
+  scores: {},   // matchId → {s1:'', s2:'', winner: 0|1|null}
+  generated: false,
+};
+
+function loadState() {
+  try { const s = localStorage.getItem('pp_v2'); if (s) state = JSON.parse(s); } catch(e){}
+}
+function saveState() {
+  localStorage.setItem('pp_v2', JSON.stringify(state));
+}
+
+// ─── TEAM HELPERS ────────────────────────────────────────────
+function team(seedIdx) {
+  if (seedIdx === null || seedIdx === undefined) return null;
+  return state.teams[seedIdx] || `Pareja ${seedIdx+1}`;
+}
+
+function getMatchTeams(id) {
+  switch(id) {
+    case 'OCT_L': return [team(6), team(9)];
+    case 'OCT_R': return [team(7), team(8)];
+    case 'Q1':    return [team(0), getWinner('OCT_L')];
+    case 'Q2':    return [team(3), team(4)];
+    case 'Q3':    return [team(1), getWinner('OCT_R')];
+    case 'Q4':    return [team(2), team(5)];
+    case 'S1':    return [getWinner('Q1'), getWinner('Q2')];
+    case 'S2':    return [getWinner('Q3'), getWinner('Q4')];
+    case 'F1':    return [getWinner('S1'), getWinner('S2')];
+  }
+}
+
+function getWinner(id) {
+  const sc = state.scores[id];
+  if (!sc || sc.winner === null || sc.winner === undefined) return null;
+  return getMatchTeams(id)[sc.winner];
+}
+
+function isReady(id) {
+  const [t1, t2] = getMatchTeams(id);
+  return !!t1 && !!t2;
+}
+
+function getScore(id) {
+  return state.scores[id] || { s1: '', s2: '', winner: null };
+}
+
+// ─── VIEW SWITCHING ──────────────────────────────────────────
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.getElementById('nav-'+v).classList.add('active');
+  if (v === 'bracket') renderBracket();
+  if (v === 'matches') renderMatches();
+}
+
+// ─── SETUP VIEW ──────────────────────────────────────────────
+function renderSetup() {
+  const c = document.getElementById('team-inputs');
+  c.innerHTML = '';
+  for (let i = 0; i < N; i++) {
+    const isBye = i < 6;
+    const row = document.createElement('div');
+    row.className = 'setup-row';
+    row.innerHTML = `
+      <span class="seed-badge${isBye ? ' seed-bye' : ''}">#${i+1}</span>
+      <input class="team-input" type="text" value="${esc(state.teams[i])}"
+             oninput="state.teams[${i}]=this.value;saveState()"
+             placeholder="Pareja ${i+1}">
+    `;
+    c.appendChild(row);
+  }
+}
+
+function generateBracket() {
+  // read inputs first
+  document.querySelectorAll('.team-input').forEach((el, i) => { state.teams[i] = el.value || `Pareja ${i+1}`; });
+  state.generated = true;
+  saveState();
+  showView('bracket');
+}
+
+function resetAll() {
+  if (!confirm('¿Borrar todos los datos del torneo?')) return;
+  state = { teams: Array.from({length:N},(_,i)=>`Pareja ${i+1}`), scores:{}, generated:false };
+  saveState();
+  renderSetup();
+}
+
+// ─── BRACKET RENDER ──────────────────────────────────────────
+const MATCH_ORDER = ['OCT_L','Q1','Q2','S1','F1','S2','Q3','Q4','OCT_R'];
+const MATCH_COL = { OCT_L:0, Q1:1, Q2:1, S1:2, F1:3, S2:4, Q3:5, Q4:5, OCT_R:6 };
+const MATCH_LABEL = { OCT_L:'Octavos', Q1:'Cuartos', Q2:'Cuartos', S1:'Semis', F1:'Final', S2:'Semis', Q3:'Cuartos', Q4:'Cuartos', OCT_R:'Octavos' };
+
+function renderBracket() {
+  const pos = document.getElementById('bracket-pos');
+  const svg = document.getElementById('bracket-svg');
+  const labels = document.getElementById('bracket-labels');
+
+  // Clear existing cards (keep svg)
+  Array.from(pos.children).forEach(c => { if (c !== svg) c.remove(); });
+  svg.innerHTML = '';
+  labels.innerHTML = '';
+
+  // Column labels
+  const roundNames = ['Octavos','Cuartos','Semis','Final','Semis','Cuartos','Octavos'];
+  const LABEL_H = 28;
+  roundNames.forEach((name, i) => {
+    const d = document.createElement('div');
+    d.className = 'round-label';
+    d.style.cssText = `width:${CW}px;margin-right:${i<6?GH:0}px;`;
+    d.textContent = name;
+    labels.appendChild(d);
+  });
+
+  // Container size
+  pos.style.cssText = `position:relative;width:${TOTAL_W}px;height:${TOTAL_H+10}px;`;
+  svg.setAttribute('width', TOTAL_W);
+  svg.setAttribute('height', TOTAL_H+10);
+
+  // Draw connector lines first (behind cards)
+  drawLines(svg);
+
+  // Draw champion trophy at center (above Final card)
+  const winner = getWinner('F1');
+  const trophy = document.createElement('div');
+  trophy.className = 'champion-banner';
+  const cx = COL[3] + CW/2;
+  const cy = Y.F1 - 8;
+  trophy.style.cssText = `left:${cx}px;top:0;transform:translateX(-50%);`;
+  trophy.innerHTML = `<div class="champion-inner">
+    <div class="champion-cup">🏆</div>
+    <div class="champion-label">Campeón</div>
+    <div class="champion-name${winner?'':' tbd'}">${winner ? esc(winner) : 'Por definir'}</div>
+  </div>`;
+  pos.appendChild(trophy);
+
+  // Draw match cards
+  MATCH_ORDER.forEach(id => {
+    const col = MATCH_COL[id];
+    const x = COL[col];
+    const y = Y[id];
+    const card = buildCard(id, x, y);
+    pos.appendChild(card);
+  });
+}
+
+function buildCard(id, x, y) {
+  const [t1, t2] = getMatchTeams(id);
+  const sc = getScore(id);
+  const card = document.createElement('div');
+  card.className = 'match-card';
+  card.id = 'card-' + id;
+  card.style.cssText = `left:${x}px;top:${y}px;width:${CW}px;height:${CH}px;`;
+  card.title = MATCH_LABEL[id];
+
+  function slotHTML(team, score, slotIdx) {
+    const isWinner = sc.winner === slotIdx;
+    const isLoser  = sc.winner !== null && sc.winner !== slotIdx;
+    const isBye    = !team;
+    let cls = 'team-slot';
+    if (isBye) cls += ' bye-slot';
+    else if (isWinner) cls += ' winner';
+    else if (isLoser) cls += ' loser';
+    const nameStr = isBye ? 'BYE' : esc(team);
+    const scoreStr = (!isBye && score !== '' && score !== undefined) ? `<span class="t-score">${score}</span>` : '';
+    return `<div class="${cls}" style="height:${SH}px;" onclick="clickSlot('${id}',${slotIdx})" title="${isBye?'BYE':esc(team)}">
+      <span class="t-name">${nameStr}</span>${scoreStr}
+    </div>`;
+  }
+
+  card.innerHTML = slotHTML(t1, sc.s1, 0) + slotHTML(t2, sc.s2, 1);
+  return card;
+}
+
+function clickSlot(id, slotIdx) {
+  showView('matches');
+  // Scroll to match
+  setTimeout(() => {
+    const el = document.getElementById('mrow-'+id);
+    if (el) el.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 100);
+}
+
+// ─── SVG LINES ───────────────────────────────────────────────
+// Color for lines
+const LINE_COLOR = '#30363d';
+const LINE_W = '1.5';
+
+function line(svg, x1, y1, x2, y2) {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  el.setAttribute('x1', x1); el.setAttribute('y1', y1);
+  el.setAttribute('x2', x2); el.setAttribute('y2', y2);
+  el.setAttribute('stroke', LINE_COLOR);
+  el.setAttribute('stroke-width', LINE_W);
+  svg.appendChild(el);
+}
+
+function drawLines(svg) {
+  const MID_H = GH / 2; // halfway through the gap
+
+  // ── Left side: OCT_L → Q1 (slot 1) ──────────────────────
+  // Oct_L card: x=COL[0], y=0, center_y = SH
+  // Q1 slot1 left entry: x=COL[1], y=SH+SH/2=3*SH/2
+  {
+    const ox = COL[0] + CW; const oy = SH;          // Oct_L right edge, match center
+    const qx = COL[1];      const qy = SH + SH/2;   // Q1 slot1 left entry center
+    const mx = ox + MID_H;
+    line(svg, ox, oy, mx, oy);    // horizontal right from Oct_L
+    line(svg, mx, oy, mx, qy);    // vertical down
+    line(svg, mx, qy, qx, qy);    // horizontal to Q1 slot1
+  }
+
+  // ── Left side: Q1 & Q2 → S1 ──────────────────────────────
+  // Q1 center_y = SH, Q2 center_y = CH+SH = 3*SH
+  // S1 left entry center: x=COL[2], y=2*SH
+  {
+    const q1x = COL[1]+CW; const q1y = SH;
+    const q2x = COL[1]+CW; const q2y = 3*SH;
+    const sx  = COL[2];    const sy  = 2*SH;
+    const mx  = q1x + MID_H;
+    line(svg, q1x, q1y, mx, q1y);   // Q1 right horizontal
+    line(svg, q2x, q2y, mx, q2y);   // Q2 right horizontal
+    line(svg, mx, q1y, mx, q2y);    // vertical connector
+    line(svg, mx, sy, sx, sy);      // horizontal to S1
+  }
+
+  // ── Left side: S1 → F1 (slot 0) ─────────────────────────
+  // S1 center_y = 2*SH, F1 slot0 center = SH+SH/2 = 3*SH/2
+  {
+    const sx = COL[2]+CW; const sy = 2*SH;
+    const fx = COL[3];    const fy = SH + SH/2;
+    const mx = sx + MID_H;
+    line(svg, sx, sy, mx, sy);    // S1 right horizontal
+    line(svg, mx, sy, mx, fy);    // vertical to F1 slot0 level
+    line(svg, mx, fy, fx, fy);    // horizontal to F1
+  }
+
+  // ── Right side: OCT_R → Q3 (slot 1, from right) ──────────
+  // Oct_R card: x=COL[6], y=0, left edge center_y = SH
+  // Q3 slot1 right entry: x=COL[5]+CW, y=SH+SH/2=3*SH/2
+  {
+    const ox = COL[6];        const oy = SH;
+    const qx = COL[5]+CW;    const qy = SH + SH/2;
+    const mx = ox - MID_H;
+    line(svg, ox, oy, mx, oy);
+    line(svg, mx, oy, mx, qy);
+    line(svg, mx, qy, qx, qy);
+  }
+
+  // ── Right side: Q3 & Q4 → S2 (from right) ───────────────
+  {
+    const q3x = COL[5];    const q3y = SH;
+    const q4x = COL[5];    const q4y = 3*SH;
+    const sx  = COL[4]+CW; const sy  = 2*SH;
+    const mx  = q3x - MID_H;
+    line(svg, q3x, q3y, mx, q3y);
+    line(svg, q4x, q4y, mx, q4y);
+    line(svg, mx, q3y, mx, q4y);
+    line(svg, mx, sy, sx, sy);
+  }
+
+  // ── Right side: S2 → F1 (slot 1, from right) ────────────
+  // S2 center_y = 2*SH, F1 slot1 center = 2*SH+SH/2 = 5*SH/2
+  {
+    const sx = COL[4];      const sy = 2*SH;
+    const fx = COL[3]+CW;   const fy = 2*SH + SH/2;
+    const mx = sx - MID_H;
+    line(svg, sx, sy, mx, sy);
+    line(svg, mx, sy, mx, fy);
+    line(svg, mx, fy, fx, fy);
+  }
+}
+
+// ─── MATCHES VIEW ────────────────────────────────────────────
+const ROUND_GROUPS = [
+  { label: 'Octavos de Final', matches: ['OCT_L','OCT_R'] },
+  { label: 'Cuartos de Final', matches: ['Q1','Q2','Q3','Q4'] },
+  { label: 'Semifinales',      matches: ['S1','S2'] },
+  { label: 'Final',            matches: ['F1'] },
+];
+
+const MATCH_NAMES = {
+  OCT_L:'Octavos 1', OCT_R:'Octavos 2',
+  Q1:'Cuartos 1', Q2:'Cuartos 2', Q3:'Cuartos 3', Q4:'Cuartos 4',
+  S1:'Semifinal 1', S2:'Semifinal 2', F1:'Final',
+};
+
+function renderMatches() {
+  const c = document.getElementById('matches-container');
+  c.innerHTML = '';
+
+  ROUND_GROUPS.forEach(({ label, matches }) => {
+    const section = document.createElement('div');
+    section.className = 'round-section';
+    section.innerHTML = `<h3>${label}</h3>`;
+    const list = document.createElement('div');
+    list.className = 'matches-list';
+
+    matches.forEach(id => {
+      const [t1, t2] = getMatchTeams(id);
+      const sc = getScore(id);
+      const ready = !!t1 && !!t2;
+      const done = sc.winner !== null && sc.winner !== undefined;
+
+      const row = document.createElement('div');
+      row.className = 'match-row' + (!ready ? ' tbd-row' : '');
+      row.id = 'mrow-' + id;
+
+      const isBye1 = !t1, isBye2 = !t2;
+      const w1 = done && sc.winner===0, w2 = done && sc.winner===1;
+      const l1 = done && !w1, l2 = done && !w2;
+
+      row.innerHTML = `
+        <div class="m-team${w1?' winner-t':l1?' loser-t':''}" title="${t1?esc(t1):'?'}">${t1?esc(t1):'<em style="color:#484f58">Por definir</em>'}</div>
+        <div class="m-center">
+          <input class="score-input" id="s1-${id}" type="number" min="0" max="99" value="${sc.s1}" placeholder="—" ${!ready?'disabled':''}>
+          <span class="score-sep">–</span>
+          <input class="score-input" id="s2-${id}" type="number" min="0" max="99" value="${sc.s2}" placeholder="—" ${!ready?'disabled':''}>
+        </div>
+        <div class="m-team right${w2?' winner-t':l2?' loser-t':''}" title="${t2?esc(t2):'?'}">${t2?esc(t2):'<em style="color:#484f58">Por definir</em>'}</div>
+      `;
+
+      // Set score button row below
+      const btnRow = document.createElement('div');
+      btnRow.style.cssText = 'display:flex;justify-content:center;margin-top:4px;gap:8px;max-width:620px;';
+      if (ready) {
+        btnRow.innerHTML = `
+          <button class="btn-set" onclick="setResult('${id}')">Guardar resultado</button>
+          ${done ? `<button class="btn-set" style="background:#da3633" onclick="clearResult('${id}')">Borrar</button>` : ''}
+        `;
+      }
+
+      list.appendChild(row);
+      list.appendChild(btnRow);
+    });
+
+    section.appendChild(list);
+    c.appendChild(section);
+  });
+}
+
+function setResult(id) {
+  const s1 = parseInt(document.getElementById('s1-'+id).value);
+  const s2 = parseInt(document.getElementById('s2-'+id).value);
+  if (isNaN(s1) || isNaN(s2)) { alert('Ingresá ambos scores'); return; }
+  if (s1 === s2) { alert('No puede haber empate'); return; }
+  state.scores[id] = { s1, s2, winner: s1 > s2 ? 0 : 1 };
+  // Clear downstream results when a match changes
+  clearDownstream(id);
+  state.scores[id] = { s1, s2, winner: s1 > s2 ? 0 : 1 };
+  saveState();
+  renderMatches();
+}
+
+function clearResult(id) {
+  clearDownstream(id);
+  delete state.scores[id];
+  saveState();
+  renderMatches();
+}
+
+// Clear results of matches that depend on this match's winner
+const FEEDS = {
+  OCT_L: ['Q1'], OCT_R: ['Q3'],
+  Q1: ['S1'], Q2: ['S1'],
+  Q3: ['S2'], Q4: ['S2'],
+  S1: ['F1'], S2: ['F1'],
+};
+function clearDownstream(id) {
+  (FEEDS[id] || []).forEach(dep => {
+    clearDownstream(dep);
+    delete state.scores[dep];
+  });
+}
+
+// ─── UTILITIES ───────────────────────────────────────────────
+function esc(s) {
+  if (!s) return '';
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ────────────────────────────────────────────────────
+loadState();
+renderSetup();
+if (state.generated) {
+  document.getElementById('nav-bracket').classList.remove('active');
+}
+</script>
+</body>
+</html>
