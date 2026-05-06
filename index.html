@@ -707,17 +707,20 @@ input[type=file]{display:none;}
 .brk-rnd-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray2);text-align:center;padding:2px 4px 10px;flex-shrink:0;}
 .brk-lbl-gold{color:var(--gold)!important;}
 .brk-col-body{display:flex;flex-direction:column;flex:1;}
-.brk-slot{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0;min-height:110px;}
-.brk-card{width:100%;background:var(--navy2);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-sizing:border-box;}
+.brk-slot{flex:1;display:flex;align-items:stretch;justify-content:center;padding:6px 0;min-height:130px;}
+.brk-card{width:100%;display:flex;flex-direction:column;background:var(--navy2);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-sizing:border-box;}
 .brk-card.fin{border-color:rgba(245,197,66,.45);background:rgba(245,197,66,.03);}
-.brk-t{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid var(--border);min-height:36px;}
+.brk-t{display:flex;align-items:center;gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);flex:1;}
 .brk-t:last-of-type{border-bottom:none;}
 .brk-t.win{background:rgba(181,229,42,.1);}
-.brk-nm{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.brk-nm.tbd{color:var(--gray2);font-style:italic;font-weight:400;font-size:12px;}
-.brk-s{font-size:17px;font-weight:900;color:var(--lime);min-width:20px;text-align:right;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;}
+.brk-names{flex:1;display:flex;flex-direction:column;gap:3px;overflow:hidden;justify-content:center;}
+.brk-n1{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+.brk-n2{font-size:11px;color:var(--gray2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+.brk-t.win .brk-n2{color:rgba(181,229,42,.6);}
+.brk-nm.tbd{color:var(--gray2);font-style:italic;}
+.brk-s{font-size:19px;font-weight:900;color:var(--lime);min-width:22px;text-align:right;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;}
 .brk-s.lo{color:var(--gray);}
-.brk-inp-row{display:flex;align-items:center;gap:5px;padding:7px 11px;background:rgba(0,0,0,.2);border-top:1px solid var(--border);}
+.brk-inp-row{display:flex;align-items:center;gap:5px;padding:7px 11px;background:rgba(0,0,0,.2);border-top:1px solid var(--border);flex-shrink:0;}
 .brk-inp-row .score-input{flex:1;min-width:36px;max-width:70px;}
 /* ─── CLASIF FULL ─────────────────────────────────────── */
 .sec-hdr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--lime);padding:14px 0 8px;border-top:1px solid var(--border);margin-top:4px;}
@@ -2452,15 +2455,26 @@ function buildBracket(t){
   const octsFor=qf=>qf?octAll.filter(o=>o.nextPid===qf.id):[];
   const hasOctL=qfsL.some(qf=>octsFor(qf).length>0);
   const hasOctR=qfsR.some(qf=>octsFor(qf).length>0);
+  function pairNames(t,idx){
+    if(idx==null) return {a:'TBD',b:''};
+    const p=(t.parejas||[])[idx];
+    return p?{a:p.n1||'',b:p.n2||''}:{a:'TBD',b:''};
+  }
   function brkCard(m,isFin=false){
-    if(!m) return '<div class="brk-card" style="opacity:.25;border-style:dashed"><div class="brk-t" style="min-height:56px"></div></div>';
-    const n1=m.p1!=null?parLabel(t,m.p1):'TBD',n2=m.p2!=null?parLabel(t,m.p2):'TBD';
+    if(!m) return '<div class="brk-card" style="opacity:.25;border-style:dashed;flex:1"><div class="brk-t" style="flex:1"></div><div class="brk-t" style="flex:1"></div></div>';
+    const p1=pairNames(t,m.p1),p2=pairNames(t,m.p2);
     const w1=m.jugado&&m.g1>m.g2,w2=m.jugado&&m.g2>m.g1;
     const canLoad=!m.jugado&&m.p1!=null&&m.p2!=null;
     const tid=t.id;
+    const slot=(p,w,sc,isNull)=>`<div class="brk-t${w?' win':''}">
+      ${isNull
+        ?`<span class="brk-nm tbd" style="font-style:italic">TBD</span>`
+        :`<div class="brk-names"><span class="brk-n1">${p.a}</span><span class="brk-n2">${p.b}</span></div>`}
+      ${m.jugado?`<b class="brk-s${w?'':' lo'}">${sc}</b>`:''}
+    </div>`;
     return `<div class="brk-card${isFin?' fin':''}" id="bc-${m.id}">
-      <div class="brk-t${w1?' win':''}"><span class="brk-nm${m.p1==null?' tbd':''}">${n1}</span>${m.jugado?`<b class="brk-s${w1?'':' lo'}">${m.g1}</b>`:''}</div>
-      <div class="brk-t${w2?' win':''}"><span class="brk-nm${m.p2==null?' tbd':''}">${n2}</span>${m.jugado?`<b class="brk-s${w2?'':' lo'}">${m.g2}</b>`:''}</div>
+      ${slot(p1,w1,m.g1,m.p1==null)}
+      ${slot(p2,w2,m.g2,m.p2==null)}
       ${canLoad?`<div class="brk-inp-row"><input class="score-input" id="bk-${m.id}-1" type="number" min="0" placeholder="0"><span>—</span><input class="score-input" id="bk-${m.id}-2" type="number" min="0" placeholder="0"><button class="btn btn-lime btn-xs" onclick="cargarResBracket('${m.id}','${tid}')">✓</button></div>`:''}
       ${m.jugado?`<div class="brk-inp-row" style="justify-content:flex-end"><button class="btn btn-ghost btn-xs" onclick="editarRes('${m.id}','${tid}')">✏️</button></div>`:''}
     </div>`;
