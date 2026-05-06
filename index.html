@@ -701,26 +701,24 @@ input[type=file]{display:none;}
 }
 
 /* ─── BRACKET TENIS ───────────────────────────────────── */
-.brk-wrap{position:relative;overflow-x:auto;padding:8px 0 20px;}
-.brk-tennis{display:flex;align-items:stretch;min-width:fit-content;}
-.brk-half{display:flex;align-items:stretch;}
-.brk-half-r{}
-.brk-col{display:flex;flex-direction:column;margin:0 7px;}
-.brk-rnd-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray2);text-align:center;padding:2px 6px 8px;flex-shrink:0;}
+.brk-wrap{position:relative;overflow-x:auto;padding:4px 0 20px;}
+.brk-tennis{display:flex;align-items:stretch;width:100%;min-width:560px;}
+.brk-col{display:flex;flex-direction:column;flex:1;min-width:0;padding:0 5px;}
+.brk-rnd-lbl{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--gray2);text-align:center;padding:2px 4px 10px;flex-shrink:0;}
 .brk-lbl-gold{color:var(--gold)!important;}
 .brk-col-body{display:flex;flex-direction:column;flex:1;}
-.brk-slot{flex:1;display:flex;align-items:center;justify-content:center;min-height:92px;}
-.brk-sf-col .brk-slot,.brk-fin-col .brk-slot{align-items:center;}
-.brk-card{background:var(--navy2);border:1px solid var(--border);border-radius:6px;overflow:hidden;width:144px;flex-shrink:0;}
-.brk-card.fin{border-color:rgba(245,197,66,.4);}
-.brk-t{display:flex;align-items:center;gap:6px;padding:6px 9px;border-bottom:1px solid var(--border);min-height:28px;}
+.brk-slot{flex:1;display:flex;align-items:center;justify-content:center;padding:6px 0;min-height:110px;}
+.brk-card{width:100%;background:var(--navy2);border:1px solid var(--border);border-radius:8px;overflow:hidden;box-sizing:border-box;}
+.brk-card.fin{border-color:rgba(245,197,66,.45);background:rgba(245,197,66,.03);}
+.brk-t{display:flex;align-items:center;gap:8px;padding:9px 13px;border-bottom:1px solid var(--border);min-height:36px;}
 .brk-t:last-of-type{border-bottom:none;}
 .brk-t.win{background:rgba(181,229,42,.1);}
-.brk-nm{flex:1;font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;}
-.brk-nm.tbd{color:var(--gray2);font-style:italic;font-weight:400;}
-.brk-s{font-size:12px;font-weight:700;color:var(--lime);min-width:14px;text-align:right;}
+.brk-nm{flex:1;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.brk-nm.tbd{color:var(--gray2);font-style:italic;font-weight:400;font-size:12px;}
+.brk-s{font-size:17px;font-weight:900;color:var(--lime);min-width:20px;text-align:right;flex-shrink:0;font-family:'Barlow Condensed',sans-serif;}
 .brk-s.lo{color:var(--gray);}
-.brk-inp-row{display:flex;align-items:center;gap:4px;padding:5px 8px;background:rgba(0,0,0,.18);border-top:1px solid var(--border);}
+.brk-inp-row{display:flex;align-items:center;gap:5px;padding:7px 11px;background:rgba(0,0,0,.2);border-top:1px solid var(--border);}
+.brk-inp-row .score-input{flex:1;min-width:36px;max-width:70px;}
 /* ─── CLASIF FULL ─────────────────────────────────────── */
 .sec-hdr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--lime);padding:14px 0 8px;border-top:1px solid var(--border);margin-top:4px;}
 .sec-hdr:first-child{border-top:none;margin-top:0;padding-top:2px;}
@@ -2473,11 +2471,16 @@ function buildBracket(t){
   }
   const octL=hasOctL?qfsL.flatMap(qf=>{const oc=octsFor(qf);return oc.length?oc:[null];}):[];
   const octR=hasOctR?qfsR.flatMap(qf=>{const oc=octsFor(qf);return oc.length?oc:[null];}):[];
+  // Todas las columnas son hijos directos del flex → se distribuyen en todo el ancho
   return `<div class="brk-wrap" id="brk-wrap">
     <div class="brk-tennis" id="brk-tennis">
-      <div class="brk-half brk-half-l">${hasOctL?col('Octavos',octL,'oct'):''}${col('Cuartos',qfsL,'qf')}${col('Semis',[sfL],'sf')}</div>
+      ${hasOctL?col('Octavos',octL,'oct'):''}
+      ${col('Cuartos',qfsL,'qf')}
+      ${col('Semis',[sfL],'sf')}
       ${col('🏆 Final',[fin],'fin','brk-lbl-gold')}
-      <div class="brk-half brk-half-r">${col('Semis',[sfR],'sf')}${col('Cuartos',qfsR,'qf')}${hasOctR?col('Octavos',octR,'oct'):''}</div>
+      ${col('Semis',[sfR],'sf')}
+      ${col('Cuartos',qfsR,'qf')}
+      ${hasOctR?col('Octavos',octR,'oct'):''}
     </div>
     <svg id="brk-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible"></svg>
   </div>`;
