@@ -2393,8 +2393,9 @@ function avanzarFase(tid){
       nextPid:qfIds[qi],nextSlot:sl,tbd:p1==null||p2==null});
   });
 
-  // Auto-propagar byes en QF: solo si ningún partido de Octavos alimenta ese slot
-  const qfsConOct=new Set(octIds.map(oid=>ps.find(o=>o.id===oid)?.nextPid).filter(Boolean));
+  // QFs que recibirán al ganador de un Octavos (no deben auto-propagarse)
+  const qfsConOct=new Set();
+  for(let i=0;i<nPlayIn;i++){const{qi}=slotMap[nByes+i];qfsConOct.add(qfIds[qi]);}
   ps.forEach(m=>{
     if(m.fase!=='Cuartos') return;
     if(m.jugado||m.nextPid==null) return;
