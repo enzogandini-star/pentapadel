@@ -704,7 +704,7 @@ input[type=file]{display:none;}
 .brk-wrap{position:relative;overflow-x:auto;padding:8px 0 20px;}
 .brk-tennis{display:flex;align-items:stretch;min-width:fit-content;}
 .brk-half{display:flex;align-items:stretch;}
-.brk-half-r{flex-direction:row-reverse;}
+.brk-half-r{}
 .brk-col{display:flex;flex-direction:column;margin:0 7px;}
 .brk-rnd-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray2);text-align:center;padding:2px 6px 8px;flex-shrink:0;}
 .brk-lbl-gold{color:var(--gold)!important;}
@@ -2369,9 +2369,10 @@ function avanzarFase(tid){
   ps.push({id:qfIds[3],fase:'Cuartos',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:sfIds[1],nextSlot:'p2',tbd:true});
 
   // slotMap: posición global → {qfIdx, slot en QF}
+  // Seed 1 y Seed 2 en lados opuestos; para N=10 → 1 Octavos por lado
   const slotMap=[
-    {qi:0,sl:'p1'},{qi:2,sl:'p1'},{qi:3,sl:'p1'},{qi:1,sl:'p1'},
-    {qi:1,sl:'p2'},{qi:3,sl:'p2'},{qi:2,sl:'p2'},{qi:0,sl:'p2'}
+    {qi:0,sl:'p1'},{qi:3,sl:'p1'},{qi:1,sl:'p1'},{qi:2,sl:'p1'},
+    {qi:2,sl:'p2'},{qi:1,sl:'p2'},{qi:3,sl:'p2'},{qi:0,sl:'p2'}
   ];
 
   // Bye teams: sorted[0..nByes-1] → directo a QF
