@@ -830,7 +830,7 @@ input[type=file]{display:none;}
   height:100%;gap:0;
 }
 @media(max-width:900px){.tv-clasif{grid-template-columns:1fr;}}
-.tv-panel{display:flex;flex-direction:column;border-right:1px solid var(--border);}
+.tv-panel{display:flex;flex-direction:column;border-right:1px solid var(--border);overflow:hidden;min-height:0;}
 .tv-panel:last-child{border-right:none;}
 .tv-panel-hdr{
   font-family:'Barlow Condensed',sans-serif;
@@ -2838,8 +2838,14 @@ function renderTV(){
   if(!tvTid) return;
   const t=torneos[tvTid]; if(!t) return; normT(t);
   const body=document.getElementById('tv-body'); if(!body) return;
-  if(tvMode==='clasificacion') body.innerHTML=buildTVClasif(t);
-  else body.innerHTML=buildTVBracket(t);
+  if(tvMode==='clasificacion'){
+    body.style.overflow='hidden';
+    body.innerHTML=buildTVClasif(t);
+  } else {
+    body.style.overflow='auto';
+    body.innerHTML=buildBracket(t);
+    requestAnimationFrame(()=>drawBracketLines(t));
+  }
   // Acciones en TV
   const actEl=document.getElementById('tv-actions');
   if(actEl) actEl.innerHTML=!t.finalizado&&t.fase==='Clasificación'
