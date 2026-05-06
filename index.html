@@ -700,41 +700,35 @@ input[type=file]{display:none;}
   background:rgba(255,255,255,.12);flex-shrink:0;
 }
 
-/* ─── BRACKET (non-TV) ────────────────────────────────── */
-.bracket-wrap{overflow-x:auto;padding-bottom:10px;}
-.bracket-cols{display:flex;gap:12px;min-width:max-content;}
-.bracket-col{width:200px;flex-shrink:0;}
-.bracket-col-title{
-  font-family:'Barlow Condensed',sans-serif;
-  font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;
-  color:var(--lime);text-align:center;
-  padding:6px 0 8px;border-bottom:1px solid var(--border);margin-bottom:10px;
-}
-.bracket-match{
-  background:var(--navy2);border:1px solid var(--border);
-  border-radius:var(--r-sm);overflow:hidden;margin-bottom:12px;
-}
-.bracket-match.is-final{border-color:rgba(245,197,66,.3);}
-.bracket-slot{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:9px 12px;border-bottom:1px solid var(--border);
-  font-size:12px;min-height:38px;
-}
-.bracket-slot:last-child{border-bottom:none;}
-.bracket-slot.win{background:rgba(181,229,42,.08);}
-.bracket-slot .sname{flex:1;font-weight:600;line-height:1.2;}
-.bracket-slot .sname.tbd{color:var(--gray);font-style:italic;font-weight:400;}
-.bracket-slot .sname.winner-name{color:var(--lime);}
-.bracket-slot .sname.loser-name{color:var(--gray);text-decoration:line-through;}
-.bracket-slot .sscore{
-  font-family:'Barlow Condensed',sans-serif;
-  font-size:18px;font-weight:900;color:var(--lime);margin-left:8px;
-}
-.bracket-slot .sscore.loser{color:var(--gray);}
-.bracket-inp{
-  display:flex;align-items:center;gap:6px;
-  padding:8px 12px;background:rgba(0,0,0,.15);
-}
+/* ─── BRACKET TENIS ───────────────────────────────────── */
+.brk-wrap{position:relative;overflow-x:auto;padding:8px 0 20px;}
+.brk-tennis{display:flex;align-items:stretch;min-width:fit-content;}
+.brk-half{display:flex;align-items:stretch;}
+.brk-half-r{flex-direction:row-reverse;}
+.brk-col{display:flex;flex-direction:column;margin:0 7px;}
+.brk-rnd-lbl{font-family:'Barlow Condensed',sans-serif;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--gray2);text-align:center;padding:2px 6px 8px;flex-shrink:0;}
+.brk-lbl-gold{color:var(--gold)!important;}
+.brk-col-body{display:flex;flex-direction:column;flex:1;}
+.brk-slot{flex:1;display:flex;align-items:center;justify-content:center;min-height:92px;}
+.brk-sf-col .brk-slot,.brk-fin-col .brk-slot{align-items:center;}
+.brk-card{background:var(--navy2);border:1px solid var(--border);border-radius:6px;overflow:hidden;width:144px;flex-shrink:0;}
+.brk-card.fin{border-color:rgba(245,197,66,.4);}
+.brk-t{display:flex;align-items:center;gap:6px;padding:6px 9px;border-bottom:1px solid var(--border);min-height:28px;}
+.brk-t:last-of-type{border-bottom:none;}
+.brk-t.win{background:rgba(181,229,42,.1);}
+.brk-nm{flex:1;font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100px;}
+.brk-nm.tbd{color:var(--gray2);font-style:italic;font-weight:400;}
+.brk-s{font-size:12px;font-weight:700;color:var(--lime);min-width:14px;text-align:right;}
+.brk-s.lo{color:var(--gray);}
+.brk-inp-row{display:flex;align-items:center;gap:4px;padding:5px 8px;background:rgba(0,0,0,.18);border-top:1px solid var(--border);}
+/* ─── CLASIF FULL ─────────────────────────────────────── */
+.sec-hdr{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;color:var(--lime);padding:14px 0 8px;border-top:1px solid var(--border);margin-top:4px;}
+.sec-hdr:first-child{border-top:none;margin-top:0;padding-top:2px;}
+.ck-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.ck-chip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;border:1px solid var(--border);background:var(--navy2);cursor:pointer;font-size:11px;font-weight:500;color:var(--gray);transition:all .15s;}
+.ck-chip.on{border-color:var(--lime);background:rgba(181,229,42,.08);color:var(--white);}
+.ck-dot{width:7px;height:7px;border-radius:50%;background:var(--gray3);flex-shrink:0;}
+.ck-chip.on .ck-dot{background:var(--lime);}
 
 /* ═══════════════════════════════════════════════════════
    RANKING
@@ -2016,13 +2010,11 @@ function renderDetalle(tid){
       <button class="btn btn-ghost btn-sm" onclick="abrirGestorParejas('${tid}')">👥 Parejas</button>
     </div>
     <div class="tabs" id="detail-tabs">
-      <button class="tab-btn active" data-dtab="checkin"  onclick="switchDTab(this,'${tid}')">Check-in</button>
-      <button class="tab-btn"        data-dtab="clasif"   onclick="switchDTab(this,'${tid}')">Clasificación</button>
-      <button class="tab-btn"        data-dtab="partidos" onclick="switchDTab(this,'${tid}')">Partidos</button>
-      ${hasElim?`<button class="tab-btn" data-dtab="bracket" onclick="switchDTab(this,'${tid}')">Bracket</button>`:''}
+      <button class="tab-btn${hasElim?'':' active'}" data-dtab="clasif" onclick="switchDTab(this,'${tid}')">📊 Clasificación</button>
+      ${hasElim?`<button class="tab-btn active" data-dtab="bracket" onclick="switchDTab(this,'${tid}')">🏆 Bracket</button>`:''}
     </div>
     <div id="detail-body"></div>`;
-  switchDTab(dv.querySelector('[data-dtab="checkin"]'),tid);
+  switchDTab(dv.querySelector(hasElim?'[data-dtab="bracket"]':'[data-dtab="clasif"]'),tid);
 }
 
 function volverLista(){
@@ -2035,13 +2027,11 @@ function volverLista(){
 function switchDTab(btn,tid){
   document.querySelectorAll('#detail-tabs .tab-btn').forEach(b=>b.classList.remove('active'));
   if(btn) btn.classList.add('active');
-  const tab=btn?.dataset.dtab||'checkin';
+  const tab=btn?.dataset.dtab||'clasif';
   const t=torneos[tid]; if(!t) return; normT(t);
   const body=document.getElementById('detail-body'); if(!body) return;
-  if(tab==='checkin')  body.innerHTML=buildCheckin(t);
-  if(tab==='clasif')   body.innerHTML=buildClasif(t);
-  if(tab==='partidos') body.innerHTML=buildPartidos(t);
-  if(tab==='bracket')  body.innerHTML=buildBracket(t);
+  if(tab==='clasif')   body.innerHTML=buildClasifFull(t);
+  if(tab==='bracket'){body.innerHTML=buildBracket(t);requestAnimationFrame(()=>drawBracketLines(t));}
 }
 
 // ─── CHECK-IN ──────────────────────────────────
@@ -2056,6 +2046,41 @@ function buildCheckin(t){
       </button>`;
     }).join('')}
   </div>`;
+}
+
+function buildClasifFull(t){
+  const pres=t.presentes||[];
+  const parejas=t.parejas||[];
+  const ckHtml=`<div class="sec-hdr">Check-in (${pres.length}/${parejas.length})</div>
+  <div class="ck-chips">
+    ${parejas.map((p,i)=>{
+      const here=pres.indexOf(i)>=0;
+      return `<button class="ck-chip${here?' on':''}" onclick="togglePresente('${t.id}',${i})"><span class="ck-dot"></span>${p.n1} / ${p.n2}</button>`;
+    }).join('')}
+  </div>`;
+  const tabla=getTablaPos(t);
+  const posHtml=tabla.length?`<div class="sec-hdr">Posiciones</div>
+  <div style="overflow-x:auto"><table class="standings">
+    <thead><tr><th class="num">#</th><th>Pareja</th><th class="num">PJ</th><th class="num">PTS</th><th class="num">GF</th><th class="num">GC</th><th class="num">DG</th></tr></thead>
+    <tbody>${tabla.map((r,pos)=>`<tr>
+      <td class="num pos ${pos===0?'pos1':pos===1?'pos2':pos===2?'pos3':''}">${pos+1}</td>
+      <td>${r.par.n1} / <span style="color:var(--gray2)">${r.par.n2}</span></td>
+      <td class="num">${r.played}</td><td class="num pts">${r.pts}</td>
+      <td class="num">${r.gf}</td><td class="num">${r.gc}</td>
+      <td class="num" style="color:${r.gf-r.gc>=0?'var(--lime)':'var(--red)'}">${r.gf-r.gc>=0?'+':''}${r.gf-r.gc}</td>
+    </tr>`).join('')}</tbody>
+  </table></div>`:'';
+  const clasifPs=(t.partidos||[]).filter(m=>m.fase==='Clasificación');
+  let matchHtml='';
+  if(clasifPs.length){
+    const byT={};clasifPs.forEach(m=>{const k=m.turno||0;if(!byT[k])byT[k]=[];byT[k].push(m);});
+    matchHtml='<div class="sec-hdr">Partidos</div>';
+    Object.keys(byT).sort((a,b)=>a-b).forEach(k=>{
+      matchHtml+=`<div style="font-size:10px;color:var(--gray2);margin:8px 0 4px">Turno ${parseInt(k)}</div>`;
+      matchHtml+=byT[k].map(m=>matchRow(m,t)).join('');
+    });
+  }
+  return ckHtml+posHtml+matchHtml;
 }
 
 function togglePresente(tid,pIdx){
@@ -2412,57 +2437,81 @@ function avanzarFase(tid){
   });
 }
 
-// ─── BRACKET RENDER ────────────────────────────
+// ─── BRACKET TENIS ─────────────────────────────
 function buildBracket(t){
   const ps=t.partidos||[];
-  const rounds=[
-    {label:'Octavos', fase:'Octavos'},
-    {label:'Cuartos', fase:'Cuartos'},
-    {label:'Semis',   fase:'Semis'},
-    {label:'Final',   fase:'Final'}
-  ].filter(r=>ps.some(m=>m.fase===r.fase));
-  if(!rounds.length) return '<div class="empty-state"><div class="ei">🏆</div><p>Sin llaves aún</p></div>';
-  return `<div class="bracket-wrap"><div class="bracket-cols">
-    ${rounds.map(r=>{
-      const matches=ps.filter(m=>m.fase===r.fase);
-      return `<div class="bracket-col">
-        <div class="bracket-col-title">${r.label}</div>
-        ${matches.map(m=>bracketMatch(m,t)).join('')}
-      </div>`;
-    }).join('')}
-  </div></div>`;
-}
-
-function bracketMatch(m,t){
-  const n1=m.p1!=null?parLabel(t,m.p1):'TBD';
-  const n2=m.p2!=null?parLabel(t,m.p2):'TBD';
-  const w1=m.jugado&&m.g1>m.g2, w2=m.jugado&&m.g2>m.g1;
-  const canLoad=!m.jugado&&m.p1!=null&&m.p2!=null;
-  const isFin=m.fase==='Final';
-  return `<div class="bracket-match ${isFin?'is-final':''}">
-    <div class="bracket-slot ${w1?'win':''}">
-      <span class="sname ${m.p1==null?'tbd':w1?'winner-name':m.jugado?'loser-name':''}">${n1}</span>
-      ${m.jugado?`<span class="sscore ${w1?'':'loser'}">${m.g1}</span>`:''}
+  const elim=ps.filter(m=>m.fase!=='Clasificación');
+  if(!elim.length) return '<div class="empty-state"><div class="ei">🏆</div><p>Sin llaves aún</p></div>';
+  const fin=elim.find(m=>m.fase==='Final');
+  const sfAll=elim.filter(m=>m.fase==='Semis');
+  const sfL=sfAll.find(m=>m.nextSlot==='p1')||sfAll[0];
+  const sfR=sfAll.find(m=>m.nextSlot==='p2')||sfAll[1];
+  const qfAll=elim.filter(m=>m.fase==='Cuartos');
+  const qfsL=qfAll.filter(m=>sfL&&m.nextPid===sfL.id).sort((a,b)=>a.nextSlot==='p1'?-1:1);
+  const qfsR=qfAll.filter(m=>sfR&&m.nextPid===sfR.id).sort((a,b)=>a.nextSlot==='p1'?-1:1);
+  const octAll=elim.filter(m=>m.fase==='Octavos');
+  const octsFor=qf=>qf?octAll.filter(o=>o.nextPid===qf.id):[];
+  const hasOctL=qfsL.some(qf=>octsFor(qf).length>0);
+  const hasOctR=qfsR.some(qf=>octsFor(qf).length>0);
+  function brkCard(m,isFin=false){
+    if(!m) return '<div class="brk-card" style="opacity:.25;border-style:dashed"><div class="brk-t" style="min-height:56px"></div></div>';
+    const n1=m.p1!=null?parLabel(t,m.p1):'TBD',n2=m.p2!=null?parLabel(t,m.p2):'TBD';
+    const w1=m.jugado&&m.g1>m.g2,w2=m.jugado&&m.g2>m.g1;
+    const canLoad=!m.jugado&&m.p1!=null&&m.p2!=null;
+    const tid=t.id;
+    return `<div class="brk-card${isFin?' fin':''}" id="bc-${m.id}">
+      <div class="brk-t${w1?' win':''}"><span class="brk-nm${m.p1==null?' tbd':''}">${n1}</span>${m.jugado?`<b class="brk-s${w1?'':' lo'}">${m.g1}</b>`:''}</div>
+      <div class="brk-t${w2?' win':''}"><span class="brk-nm${m.p2==null?' tbd':''}">${n2}</span>${m.jugado?`<b class="brk-s${w2?'':' lo'}">${m.g2}</b>`:''}</div>
+      ${canLoad?`<div class="brk-inp-row"><input class="score-input" id="bk-${m.id}-1" type="number" min="0" placeholder="0"><span>—</span><input class="score-input" id="bk-${m.id}-2" type="number" min="0" placeholder="0"><button class="btn btn-lime btn-xs" onclick="cargarResBracket('${m.id}','${tid}')">✓</button></div>`:''}
+      ${m.jugado?`<div class="brk-inp-row" style="justify-content:flex-end"><button class="btn btn-ghost btn-xs" onclick="editarRes('${m.id}','${tid}')">✏️</button></div>`:''}
+    </div>`;
+  }
+  function col(label,matches,cls,lblCls=''){
+    return `<div class="brk-col brk-${cls}-col"><div class="brk-rnd-lbl ${lblCls}">${label}</div>
+      <div class="brk-col-body">${matches.map(m=>`<div class="brk-slot">${brkCard(m,m&&m.fase==='Final')}</div>`).join('')}</div></div>`;
+  }
+  const octL=hasOctL?qfsL.flatMap(qf=>{const oc=octsFor(qf);return oc.length?oc:[null];}):[];
+  const octR=hasOctR?qfsR.flatMap(qf=>{const oc=octsFor(qf);return oc.length?oc:[null];}):[];
+  return `<div class="brk-wrap" id="brk-wrap">
+    <div class="brk-tennis" id="brk-tennis">
+      <div class="brk-half brk-half-l">${hasOctL?col('Octavos',octL,'oct'):''}${col('Cuartos',qfsL,'qf')}${col('Semis',[sfL],'sf')}</div>
+      ${col('🏆 Final',[fin],'fin','brk-lbl-gold')}
+      <div class="brk-half brk-half-r">${col('Semis',[sfR],'sf')}${col('Cuartos',qfsR,'qf')}${hasOctR?col('Octavos',octR,'oct'):''}</div>
     </div>
-    <div class="bracket-slot ${w2?'win':''}">
-      <span class="sname ${m.p2==null?'tbd':w2?'winner-name':m.jugado?'loser-name':''}">${n2}</span>
-      ${m.jugado?`<span class="sscore ${w2?'':'loser'}">${m.g2}</span>`:''}
-    </div>
-    ${canLoad?`<div class="bracket-inp">
-      <input class="score-input" id="bc-${m.id}-1" type="number" min="0" placeholder="0" style="width:44px">
-      <span class="score-sep">—</span>
-      <input class="score-input" id="bc-${m.id}-2" type="number" min="0" placeholder="0" style="width:44px">
-      <button class="btn btn-lime btn-xs" onclick="cargarResBracket('${m.id}','${currentTid}')">OK</button>
-    </div>`:''}
-    ${m.jugado?`<div class="bracket-inp" style="justify-content:flex-end">
-      <button class="btn btn-ghost btn-xs" onclick="editarRes('${m.id}','${currentTid}')">✏️ Editar</button>
-    </div>`:''}
+    <svg id="brk-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;overflow:visible"></svg>
   </div>`;
 }
 
+function drawBracketLines(t){
+  const wrap=document.getElementById('brk-wrap');
+  const svg=document.getElementById('brk-svg');
+  if(!wrap||!svg) return;
+  const wr=wrap.getBoundingClientRect();
+  const clr='#2d3f52';
+  const parts=(t.partidos||[]).filter(m=>m.fase!=='Clasificación');
+  const targets={};
+  parts.forEach(m=>{if(m.nextPid){if(!targets[m.nextPid])targets[m.nextPid]=[];targets[m.nextPid].push(m.id);}});
+  const lines=[];
+  Object.entries(targets).forEach(([tid,sids])=>{
+    const tc=document.getElementById('bc-'+tid);if(!tc) return;
+    const tr=tc.getBoundingClientRect();
+    const tCY=tr.top+tr.height/2-wr.top,tL=tr.left-wr.left,tR=tr.right-wr.left;
+    sids.forEach(sid=>{
+      const sc=document.getElementById('bc-'+sid);if(!sc) return;
+      const sr=sc.getBoundingClientRect();
+      const sCY=sr.top+sr.height/2-wr.top,sR=sr.right-wr.left,sL=sr.left-wr.left;
+      const fromLeft=sR<tL+8;
+      const x1=fromLeft?sR:sL,x2=fromLeft?tL:tR;
+      const midX=(x1+x2)/2;
+      lines.push(`<polyline fill="none" stroke="${clr}" stroke-width="1.5" stroke-linecap="round" points="${x1},${sCY} ${midX},${sCY} ${midX},${tCY} ${x2},${tCY}"/>`);
+    });
+  });
+  svg.innerHTML=lines.join('');
+}
+
 function cargarResBracket(mid,tid){
-  const g1=parseInt(document.getElementById('bc-'+mid+'-1')?.value);
-  const g2=parseInt(document.getElementById('bc-'+mid+'-2')?.value);
+  const g1=parseInt(document.getElementById('bk-'+mid+'-1')?.value);
+  const g2=parseInt(document.getElementById('bk-'+mid+'-2')?.value);
   if(isNaN(g1)||isNaN(g2)){toast('Ingresá ambos resultados','error');return;}
   if(g1===g2){toast('No puede haber empate','error');return;}
   const t=JSON.parse(JSON.stringify(torneos[tid])); normT(t);
