@@ -1,0 +1,30 @@
+<svg viewBox="0 0 310 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- P shape outer (lime) -->
+  <path d="
+    M 20,8
+    L 185,8
+    Q 270,8 270,88
+    Q 270,168 185,168
+    L 100,168
+    L 100,225
+    L 20,195
+    Z
+  " fill="#b5e52a"/>
+
+  <!-- P inner counter cutout -->
+  <path d="
+    M 100,55
+    L 170,55
+    Q 215,55 215,88
+    Q 215,120 170,120
+    L 100,120
+    Z
+  " fill="#0a1628"/>
+
+  <!-- Ball -->
+  <circle cx="238" cy="183" r="38" fill="#b5e52a"/>
+  <!-- Ball seam left -->
+  <path d="M 224,164 Q 202,183 224,202" stroke="#0a1628" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <!-- Ball seam right -->
+  <path d="M 250,164 Q 272,183 250,202" stroke="#0a1628" stroke-width="4" fill="none" stroke-linecap="round"/>
+</svg>
