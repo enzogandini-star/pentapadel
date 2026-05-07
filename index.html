@@ -1503,6 +1503,7 @@ let currentTorneoTab = 'activos';
 
 // ─── UTILS ─────────────────────────────────────
 const uid   = () => db.ref().push().key;
+const esc   = s => String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 const toArr = obj => obj ? Object.values(obj) : [];
 const jArr  = () => toArr(jugadores);
 const tArr  = () => toArr(torneos);
@@ -1535,7 +1536,7 @@ function getTablaPos(t) {
 
 function parLabel(t,i) {
   const p=(t.parejas||[])[i];
-  return p ? `${p.n1} / ${p.n2}` : 'TBD';
+  return p ? `${esc(p.n1)} / ${esc(p.n2)}` : 'TBD';
 }
 function catLabel(num,vari){return `${num}ª${vari||''}`;}
 
@@ -1659,8 +1660,8 @@ function renderInicio(){
           <div class="info-card info-card-active" style="cursor:pointer"
                onclick="navTo('torneos');setTimeout(()=>verDetalle('${t.id}'),80)">
             <div class="info-card-label">Activo</div>
-            <div class="info-card-name">${t.nombre}</div>
-            <div class="info-card-date">${t.fecha||'Sin fecha'} · ${(t.parejas||[]).length} parejas</div>
+            <div class="info-card-name">${esc(t.nombre)}</div>
+            <div class="info-card-date">${esc(t.fecha||'Sin fecha')} · ${(t.parejas||[]).length} parejas</div>
             <button class="btn btn-lime btn-sm" style="margin-top:8px"
                     onclick="event.stopPropagation();openTV('${t.id}')">📺 EN VIVO</button>
           </div>`).join('')}
@@ -1670,8 +1671,8 @@ function renderInicio(){
       <div class="info-card" style="cursor:pointer;margin-bottom:16px"
            onclick="navTo('torneos');setTimeout(()=>verDetalle('${fins[0].id}'),80)">
         <div class="info-card-label" style="color:var(--gold)">Finalizado</div>
-        <div class="info-card-name">${fins[0].nombre}</div>
-        <div class="info-card-date">${fins[0].fecha||'Sin fecha'} · ${(fins[0].parejas||[]).length} parejas</div>
+        <div class="info-card-name">${esc(fins[0].nombre)}</div>
+        <div class="info-card-date">${esc(fins[0].fecha||'Sin fecha')} · ${(fins[0].parejas||[]).length} parejas</div>
       </div>`:''}
     <div class="quick-grid">
       <button class="quick-btn" onclick="navTo('torneos')"><span class="qi">🏆</span>Torneos</button>
@@ -1710,7 +1711,7 @@ function addJugador(){
       document.getElementById('jn').value='';
       document.getElementById('jcel').value='';
       document.getElementById('jn-warn').style.display='none';
-    });
+    }).catch(()=>toast('Error al guardar','error'));
 }
 
 function renderJugadores(){
@@ -1743,7 +1744,7 @@ function renderJugadores(){
       <div class="jug-folder-body">
         ${g.list.map(j=>`
           <div class="jug-row">
-            <span class="jug-name">${j.nombre}</span>
+            <span class="jug-name">${esc(j.nombre)}</span>
             <div class="jug-actions">
               ${j.celular?`<a class="btn btn-wa btn-xs" href="https://wa.me/54${j.celular}" target="_blank">WhatsApp</a>`:''}
               <button class="btn btn-ghost btn-xs" onclick="editarJugador('${j.id}')">Editar</button>
@@ -1791,14 +1792,14 @@ function guardarEdicionJugador(){
     document.getElementById('jug-form-card').querySelector('.card-title').textContent='Nuevo Jugador';
     const btn=document.getElementById('jug-form-card').querySelector('button.btn-lime');
     btn.textContent='+ Agregar'; btn.onclick=addJugador;
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 function eliminarJugador(jid){
   openModal('Eliminar jugador',
-    `¿Eliminar a <b>${jugadores[jid]?.nombre}</b>?<br><small style="color:var(--gray)">Esta acción no se puede deshacer.</small>`,
+    `¿Eliminar a <b>${esc(jugadores[jid]?.nombre)}</b>?<br><small style="color:var(--gray)">Esta acción no se puede deshacer.</small>`,
     'Eliminar',
-    ()=>db.ref('jugadores/'+jid).remove().then(()=>toast('Jugador eliminado','ok'))
+    ()=>db.ref('jugadores/'+jid).remove().then(()=>toast('Jugador eliminado','ok')).catch(()=>toast('Error al eliminar','error'))
   );
 }
 
@@ -1855,11 +1856,11 @@ function renderTorneosList(){
   el.innerHTML=lista.length ? lista.map(t=>`
     <div class="torneo-card">
       <div class="torneo-card-top">
-        <span class="torneo-card-name">${t.nombre}</span>
+        <span class="torneo-card-name">${esc(t.nombre)}</span>
         <span class="badge ${t.finalizado?'badge-gray':'badge-lime'}">${t.finalizado?'Finalizado':'Activo'}</span>
       </div>
       <div class="torneo-card-meta">
-        <span>${t.fecha||'Sin fecha'}</span>
+        <span>${esc(t.fecha||'Sin fecha')}</span>
         <span>${(t.parejas||[]).length} parejas</span>
         <span>${t.tipo==='suma'?'Por suma':'Por cat.'}</span>
       </div>
@@ -1899,7 +1900,7 @@ function refreshJSelPanel(){
   if(!el) return;
   el.innerHTML=ja.length ? ja.map(j=>`
     <div class="jsel-item ${selSet.has(j.id)?'jsel-sel':''}" onclick="selectWipJ('${j.id}')">
-      <span class="jsel-item-name">${selSet.has(j.id)?'✓ ':''} ${j.nombre}</span>
+      <span class="jsel-item-name">${selSet.has(j.id)?'✓ ':''} ${esc(j.nombre)}</span>
       <span class="jsel-item-cat">${catLabel(j.catNum,j.catVar)}</span>
     </div>`).join('')
     : '<div style="padding:12px 14px;font-size:12px;color:var(--gray)">Sin jugadores disponibles</div>';
@@ -1925,10 +1926,10 @@ function _actualizarWipSlots(){
   const s1=document.getElementById('wip-j1');
   const s2=document.getElementById('wip-j2');
   if(s1) s1.innerHTML=j1
-    ?`<span class="wip-slot-filled">${j1.nombre} <small style="color:var(--gray)">${catLabel(j1.catNum,j1.catVar)}</small></span>`
+    ?`<span class="wip-slot-filled">${esc(j1.nombre)} <small style="color:var(--gray)">${catLabel(j1.catNum,j1.catVar)}</small></span>`
     :`<span class="wip-slot-empty">Jugador 1</span>`;
   if(s2) s2.innerHTML=j2
-    ?`<span class="wip-slot-filled">${j2.nombre} <small style="color:var(--gray)">${catLabel(j2.catNum,j2.catVar)}</small></span>`
+    ?`<span class="wip-slot-filled">${esc(j2.nombre)} <small style="color:var(--gray)">${catLabel(j2.catNum,j2.catVar)}</small></span>`
     :`<span class="wip-slot-empty">Jugador 2</span>`;
 }
 
@@ -1959,7 +1960,7 @@ function renderWipParejaList(){
   el.innerHTML=wipParejas.map((p,i)=>`
     <div class="pareja-item">
       <div>
-        <div class="pareja-item-name">${p.n1} / ${p.n2}</div>
+        <div class="pareja-item-name">${esc(p.n1)} / ${esc(p.n2)}</div>
         <div class="pareja-item-cat">Pareja ${i+1}</div>
       </div>
       <button class="btn btn-red btn-xs" onclick="quitarWipPar(${i})">✕</button>
@@ -1989,7 +1990,7 @@ function crearTorneo(){
     document.getElementById('tnombre').value='';
     currentTid=ref.key;
     verDetalle(ref.key);
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 // ─── TORNEO DETAIL ─────────────────────────────
@@ -2010,10 +2011,10 @@ function renderDetalle(tid){
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm detail-back" onclick="volverLista()">← Volver</button>
       <div style="flex:1">
-        <div class="detail-title">${t.nombre}</div>
+        <div class="detail-title">${esc(t.nombre)}</div>
         <div class="detail-meta">
           <span class="badge badge-${t.finalizado?'gray':'lime'}">${t.finalizado?'Finalizado':'Activo'}</span>
-          <span style="font-size:12px;color:var(--gray)">${t.fecha||''}</span>
+          <span style="font-size:12px;color:var(--gray)">${esc(t.fecha||'')}</span>
           <span style="font-size:12px;color:var(--gray)">${t.parejas.length} parejas</span>
         </div>
       </div>
@@ -2058,7 +2059,7 @@ function buildCheckin(t){
       const pres=pos>=0;
       return `<button class="checkin-btn ${pres?'present':''}" onclick="togglePresente('${t.id}',${i})">
         <span class="checkin-num ${pres?'':'empty'}">${pres?'#'+(pos+1):'-'}</span>
-        <span class="checkin-name">${p.n1}<br><span style="color:var(--gray)">${p.n2}</span></span>
+        <span class="checkin-name">${esc(p.n1)}<br><span style="color:var(--gray)">${esc(p.n2)}</span></span>
       </button>`;
     }).join('')}
   </div>`;
@@ -2071,7 +2072,7 @@ function buildClasifFull(t){
   <div class="ck-chips">
     ${parejas.map((p,i)=>{
       const here=pres.indexOf(i)>=0;
-      return `<button class="ck-chip${here?' on':''}" onclick="togglePresente('${t.id}',${i})"><span class="ck-dot"></span>${p.n1} / ${p.n2}</button>`;
+      return `<button class="ck-chip${here?' on':''}" onclick="togglePresente('${t.id}',${i})"><span class="ck-dot"></span>${esc(p.n1)} / ${esc(p.n2)}</button>`;
     }).join('')}
   </div>`;
   const tabla=getTablaPos(t);
@@ -2080,7 +2081,7 @@ function buildClasifFull(t){
     <thead><tr><th class="num">#</th><th>Pareja</th><th class="num">PJ</th><th class="num">PTS</th><th class="num">GF</th><th class="num">GC</th><th class="num">DG</th></tr></thead>
     <tbody>${tabla.map((r,pos)=>`<tr>
       <td class="num pos ${pos===0?'pos1':pos===1?'pos2':pos===2?'pos3':''}">${pos+1}</td>
-      <td>${r.par.n1} / <span style="color:var(--gray2)">${r.par.n2}</span></td>
+      <td>${esc(r.par.n1)} / <span style="color:var(--gray2)">${esc(r.par.n2)}</span></td>
       <td class="num">${r.played}</td><td class="num pts">${r.pts}</td>
       <td class="num">${r.gf}</td><td class="num">${r.gc}</td>
       <td class="num" style="color:${r.gf-r.gc>=0?'var(--lime)':'var(--red)'}">${r.gf-r.gc>=0?'+':''}${r.gf-r.gc}</td>
@@ -2129,7 +2130,7 @@ function togglePresente(tid,pIdx){
   }
   db.ref('torneos/'+tid).set(t).then(()=>{
     if(currentTid===tid) renderDetalle(tid);
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 function completarFixture(t){
@@ -2190,7 +2191,7 @@ function buildClasif(t){
       <tbody>
         ${tabla.map((r,pos)=>`<tr>
           <td class="num pos ${pos===0?'pos1':pos===1?'pos2':pos===2?'pos3':''}">${pos+1}</td>
-          <td>${r.par.n1} / <span style="color:var(--gray2)">${r.par.n2}</span></td>
+          <td>${esc(r.par.n1)} / <span style="color:var(--gray2)">${esc(r.par.n2)}</span></td>
           <td class="num">${r.played}</td>
           <td class="num pts">${r.pts}</td>
           <td class="num">${r.gf}</td>
@@ -2264,7 +2265,7 @@ function cargarRes(mid,tid){
   db.ref('torneos/'+tid).set(t).then(()=>{
     if(currentTid===tid) renderDetalle(tid);
     if(tvTid===tid) renderTV();
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 function editarRes(mid,tid){
@@ -2292,7 +2293,7 @@ function editarRes(mid,tid){
       db.ref('torneos/'+tid).set(tt).then(()=>{
         if(currentTid===tid) renderDetalle(tid);
         if(tvTid===tid) renderTV();
-      });
+      }).catch(()=>toast('Error al guardar','error'));
     }
   );
 }
@@ -2336,7 +2337,7 @@ function repararLlaves(tid){
   db.ref('torneos/'+tid).set(t).then(()=>{
     toast('Llaves reparadas ✓','ok');
     if(currentTid===tid) renderDetalle(tid);
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 function clearElimChain(ps,pid){
@@ -2451,7 +2452,7 @@ function avanzarFase(tid){
   db.ref('torneos/'+tid).set(t).then(()=>{
     toast('Llaves generadas','ok');
     if(currentTid===tid) renderDetalle(tid);
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 // ─── BRACKET TENIS ─────────────────────────────
@@ -2473,7 +2474,7 @@ function buildBracket(t){
   function pairNames(t,idx){
     if(idx==null) return {a:'TBD',b:''};
     const p=(t.parejas||[])[idx];
-    return p?{a:p.n1||'',b:p.n2||''}:{a:'TBD',b:''};
+    return p?{a:esc(p.n1||''),b:esc(p.n2||'')}:{a:'TBD',b:''};
   }
   function brkCard(m,isFin=false){
     if(!m) return '<div class="brk-card" style="opacity:.25;border-style:dashed;flex:1"><div class="brk-t" style="flex:1"></div><div class="brk-t" style="flex:1"></div></div>';
@@ -2555,7 +2556,7 @@ function cargarResBracket(mid,tid){
   db.ref('torneos/'+tid).set(t).then(()=>{
     if(currentTid===tid) renderDetalle(tid);
     if(tvTid===tid) renderTV();
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 // ─── FINALIZAR / ELIMINAR TORNEO ───────────────
@@ -2608,20 +2609,20 @@ function finalizarTorneo(tid){
       db.ref().update(dbUpd).then(()=>{
         toast('Torneo finalizado · Puntos otorgados','ok');
         volverLista();
-      });
+      }).catch(()=>toast('Error al guardar','error'));
     }
   );
 }
 
 function eliminarTorneo(tid){
   openModal('Eliminar torneo',
-    `¿Eliminar permanentemente el torneo <b>${torneos[tid]?.nombre}</b>?`,
+    `¿Eliminar permanentemente el torneo <b>${esc(torneos[tid]?.nombre)}</b>?`,
     'Eliminar',
     ()=>db.ref('torneos/'+tid).remove().then(()=>{
       toast('Torneo eliminado','ok');
       if(currentTid===tid){currentTid=null;}
       volverLista();
-    })
+    }).catch(()=>toast('Error al eliminar','error'))
   );
 }
 
@@ -2650,7 +2651,7 @@ function renderGestorParejasList(){
   const el=document.getElementById('gestor-parejas-lista'); if(!el) return;
   el.innerHTML=(t.parejas||[]).map((p,i)=>`
     <div class="jug-row">
-      <span class="jug-name" style="font-size:12px">${i+1}. ${p.n1} / ${p.n2}</span>
+      <span class="jug-name" style="font-size:12px">${i+1}. ${esc(p.n1)} / ${esc(p.n2)}</span>
       <div class="jug-actions">
         <button class="btn btn-ghost btn-xs" onclick="gestorEditarPar(${i})">✏️</button>
         <button class="btn btn-red btn-xs" onclick="gestorEliminarPar(${i})">✕</button>
@@ -2675,7 +2676,7 @@ function gestorEliminarPar(i){
     db.ref('torneos/'+gestorTid).set(t).then(()=>{
       toast('Pareja eliminada','ok');
       renderGestorParejasList();
-    });
+    }).catch(()=>toast('Error al guardar','error'));
   });
 }
 
@@ -2692,7 +2693,7 @@ function renderGestorBuscador(){
   const el=document.getElementById('gestor-buscador'); if(!el) return;
   el.innerHTML=ja.map(j=>`
     <div class="gestor-jitem ${sel.has(j.id)?'used':''}" onclick="gestorSelectJ('${j.id}')">
-      <span>${j.nombre}</span>
+      <span>${esc(j.nombre)}</span>
       <span style="font-size:11px;color:var(--gray)">${catLabel(j.catNum,j.catVar)}</span>
     </div>`).join('') || '<div style="padding:8px 12px;font-size:12px;color:var(--gray)">Sin jugadores</div>';
 }
@@ -2712,8 +2713,8 @@ function _actualizarGestorSlots(){
   const j2=gestorJ2?jugadores[gestorJ2]:null;
   const s1=document.getElementById('gestor-j1');
   const s2=document.getElementById('gestor-j2');
-  if(s1) s1.innerHTML=j1?`<span style="font-weight:600">${j1.nombre}</span>`:`<span class="gestor-slot-empty">Jugador 1</span>`;
-  if(s2) s2.innerHTML=j2?`<span style="font-weight:600">${j2.nombre}</span>`:`<span class="gestor-slot-empty">Jugador 2</span>`;
+  if(s1) s1.innerHTML=j1?`<span style="font-weight:600">${esc(j1.nombre)}</span>`:`<span class="gestor-slot-empty">Jugador 1</span>`;
+  if(s2) s2.innerHTML=j2?`<span style="font-weight:600">${esc(j2.nombre)}</span>`:`<span class="gestor-slot-empty">Jugador 2</span>`;
 }
 
 function confirmarNuevaPareja(){
@@ -2734,7 +2735,7 @@ function confirmarNuevaPareja(){
     toast('Pareja actualizada','ok');
     renderGestorParejasList();
     renderGestorBuscador();
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 // ─── RANKING ───────────────────────────────────
@@ -2763,7 +2764,7 @@ function renderRanking(){
     <div class="rank-row">
       ${pos<3?`<span class="rank-medal">${medals[pos]}</span>`:`<div class="rank-pos">${pos+1}</div>`}
       <div style="flex:1">
-        <div class="rank-name">${j.nombre}</div>
+        <div class="rank-name">${esc(j.nombre)}</div>
         <div class="rank-cat">${catLabel(j.catNum,j.catVar)} · ${j.torneosCount||0} torneos</div>
       </div>
       <div>
@@ -2782,7 +2783,7 @@ function resetRanking(){
   openModal('Resetear ranking','¿Resetear todos los puntos de ranking? Esta acción no se puede deshacer.','Resetear',()=>{
     const upd={};
     jArr().forEach(j=>{upd['jugadores/'+j.id+'/puntos']=0;upd['jugadores/'+j.id+'/torneosCount']=0;});
-    db.ref().update(upd).then(()=>toast('Ranking reseteado','ok'));
+    db.ref().update(upd).then(()=>toast('Ranking reseteado','ok')).catch(()=>toast('Error al guardar','error'));
   });
 }
 
@@ -2849,7 +2850,7 @@ function buildTVClasif(t){
                       onclick="tvTogglePresente('${t.id}',${r.i})">
                 ${t.presentes.includes(r.i)?'✓ #'+(t.presentes.indexOf(r.i)+1):'○'}
               </button>
-              ${r.par.n1} / ${r.par.n2}
+              ${esc(r.par.n1)} / ${esc(r.par.n2)}
             </div>
             <div class="tv-pos-pts">${r.pts}</div>
           </div>`).join('')}
@@ -2905,7 +2906,7 @@ function cargarResTV(mid,tid){
   db.ref('torneos/'+tid).set(t).then(()=>{
     if(currentTid===tid) renderDetalle(tid);
     renderTV();
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 function cancelarResTV(mid,tid){
@@ -2916,7 +2917,7 @@ function cancelarResTV(mid,tid){
   db.ref('torneos/'+tid).set(t).then(()=>{
     if(currentTid===tid) renderDetalle(tid);
     renderTV();
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 function buildTVBracket(t){
@@ -2990,7 +2991,7 @@ function cargarResTVBracket(mid,tid){
   db.ref('torneos/'+tid).set(t).then(()=>{
     if(currentTid===tid) renderDetalle(tid);
     renderTV();
-  });
+  }).catch(()=>toast('Error al guardar','error'));
 }
 
 // ─── BACKUP / RESTORE ──────────────────────────
@@ -3016,7 +3017,7 @@ function restoreJSON(input){
           const upd={};
           if(data.jugadores) upd.jugadores=data.jugadores;
           if(data.torneos)   upd.torneos=data.torneos;
-          db.ref().update(upd).then(()=>toast('Backup restaurado','ok'));
+          db.ref().update(upd).then(()=>toast('Backup restaurado','ok')).catch(()=>toast('Error al restaurar','error'));
         }
       );
     }catch{ toast('Error al leer el archivo','error'); }
