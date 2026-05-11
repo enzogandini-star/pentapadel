@@ -1158,10 +1158,11 @@ input[type=file]{display:none;}
   /* Ranking pts number */
   .rank-pts{font-size:18px;}
 
-  /* TV bracket — touch zoom */
-  .tv-butterfly-wrap{touch-action:none;overflow:hidden;user-select:none;}
-  .tv-butterfly-inner{will-change:transform;}
 }
+
+/* TV bracket — touch zoom (todas las orientaciones, solo touch) */
+.tv-butterfly-wrap{touch-action:none;overflow:hidden;user-select:none;}
+.tv-butterfly-inner{will-change:transform;}
 
 /* TV header compacto en landscape mobile */
 @media(max-width:900px) and (orientation:landscape){
@@ -3234,10 +3235,12 @@ function initTVPinchZoom(){
     });
   }
 
-  // Auto-fit immediately and on orientation change
+  // Auto-fit al abrir (portrait o landscape) y al rotar
   fitScreen();
+  setTimeout(fitScreen,150);
   const onOrient=()=>setTimeout(fitScreen,350);
   window.addEventListener('orientationchange',onOrient);
+  window.addEventListener('resize',onOrient);
   // Cleanup old listener when wrap is replaced
   wrap._cleanup=()=>window.removeEventListener('orientationchange',onOrient);
 
