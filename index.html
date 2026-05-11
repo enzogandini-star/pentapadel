@@ -2402,38 +2402,66 @@ function avanzarFase(tid){
   // Play-in teams: sorted[nByes..N-1]
   const byeTeams=sorted.slice(0,nByes);
   const playInTeams=sorted.slice(nByes,N);
-  const half=Math.ceil(playInTeams.length/2);
-  const topHalf=playInTeams.slice(0,half);
-  const botHalf=playInTeams.slice(half);
 
-  // Anti-repetición: mejor permutación de botHalf
+  // Anti-repetición mejorada: busca el emparejamiento óptimo entre TODOS los play-in teams
   const clasifPs=t.partidos.filter(m=>m.fase==='Clasificación'&&m.jugado);
   function yaJugaron(a,b){return clasifPs.some(m=>(m.p1===a&&m.p2===b)||(m.p1===b&&m.p2===a));}
-  function perms(arr){
-    if(arr.length<=1)return[arr];
-    const res=[];
-    arr.forEach((v,i)=>{
-      const rest=[...arr.slice(0,i),...arr.slice(i+1)];
-      perms(rest).forEach(p=>res.push([v,...p]));
+  // Genera todos los emparejamientos perfectos posibles (sin restricción top/bot)
+  function allPairings(teams){
+    if(teams.length===0)return[[]];
+    const first=teams[0],rest=teams.slice(1),res=[];
+    rest.forEach((partner,idx)=>{
+      const rem=rest.filter((_,i)=>i!==idx);
+      allPairings(rem).forEach(sub=>res.push([[first,partner],...sub]));
     });
     return res;
   }
-  let bestBot=botHalf, bestReps=Infinity;
-  const allPerms=botHalf.length<=6?perms(botHalf):[botHalf];
-  allPerms.forEach(perm=>{
-    let reps=0;
-    perm.forEach((b,i)=>{if(i<topHalf.length&&yaJugaron(topHalf[i],b))reps++;});
-    if(reps<bestReps){bestReps=reps;bestBot=perm;}
-  });
+  let bestPairs=null,bestReps=Infinity,bestSeedDiff=-Infinity;
+  if(playInTeams.length<=12){
+    // Exploración completa: hasta N=14 (máx ~10k combinaciones, instantáneo)
+    allPairings(playInTeams).forEach(pairing=>{
+      let reps=0,sd=0;
+      pairing.forEach(([a,b])=>{
+        if(yaJugaron(a,b))reps++;
+        sd+=Math.abs(playInTeams.indexOf(a)-playInTeams.indexOf(b));
+      });
+      if(reps<bestReps||(reps===bestReps&&sd>bestSeedDiff)){bestReps=reps;bestSeedDiff=sd;bestPairs=pairing;}
+    });
+  } else {
+    // Fallback N=15-16: permuta la mitad inferior sin límite (8! = 40k, manejable)
+    const half=Math.ceil(playInTeams.length/2);
+    const topHalf=playInTeams.slice(0,half),botHalf=playInTeams.slice(half);
+    function perms(arr){
+      if(arr.length<=1)return[arr];
+      const res=[];
+      arr.forEach((v,i)=>{const rest=[...arr.slice(0,i),...arr.slice(i+1)];perms(rest).forEach(p=>res.push([v,...p]));});
+      return res;
+    }
+    let bestBot=botHalf;bestReps=Infinity;
+    perms(botHalf).forEach(perm=>{
+      let reps=0;
+      perm.forEach((b,i)=>{if(i<topHalf.length&&yaJugaron(topHalf[i],b))reps++;});
+      if(reps<bestReps){bestReps=reps;bestBot=perm;}
+    });
+    bestPairs=topHalf.map((a,i)=>[a,bestBot[i]]);
+  }
+  // Avisar si no se pudo evitar algún rematch
+  if(bestReps>0) toast(`⚠️ ${bestReps} partido${bestReps>1?'s':''} de octavos repite rival de clasificación`,'info');
+  // Ordenar pares por mejor semilla para mantener la estructura del bracket
+  bestPairs.sort((pA,pB)=>
+    Math.min(playInTeams.indexOf(pA[0]),playInTeams.indexOf(pA[1]))-
+    Math.min(playInTeams.indexOf(pB[0]),playInTeams.indexOf(pB[1]))
+  );
 
   // Crear partidos de octavos
   octIds.forEach((oid,i)=>{
     const {qi,sl}=slotMap[nByes+i];
-    const p1=topHalf[i]??null;
-    const p2=bestBot[i]??null;
+    const [a,b]=bestPairs[i];
+    const posA=playInTeams.indexOf(a),posB=playInTeams.indexOf(b);
+    const p1=posA<posB?a:b, p2=posA<posB?b:a;
     ps.push({id:oid,fase:'Octavos',
       p1,p2,g1:null,g2:null,jugado:false,
-      nextPid:qfIds[qi],nextSlot:sl,tbd:p1==null||p2==null});
+      nextPid:qfIds[qi],nextSlot:sl,tbd:false});
   });
 
   // QFs que recibirán al ganador de un Octavos (no deben auto-propagarse)
