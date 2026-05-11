@@ -2929,7 +2929,7 @@ function renderTV(){
     body.innerHTML=buildTVClasif(t);
   } else {
     body.style.overflow='auto';
-    body.innerHTML=buildBracket(t);
+    body.innerHTML=buildTVBracket(t);
     requestAnimationFrame(()=>drawBracketLines(t));
   }
   // Acciones en TV
