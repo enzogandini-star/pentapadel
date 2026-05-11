@@ -1783,8 +1783,13 @@ function guardarEdicionJugador(){
     {toast('Ya existe ese nombre','error');return;}
   if(celular&&ja.find(j=>j.celular&&j.celular===celular&&j.id!==editingJid))
     {toast('Ya existe ese celular','error');return;}
-  db.ref('jugadores/'+editingJid).update({nombre,celular,catNum,catVar,genero}).then(()=>{
-    toast('Jugador actualizado','ok');
+  const prev=jugadores[editingJid]||{};
+  const catChanged=catNum!==prev.catNum;
+  const newPuntos=catChanged?Math.round((prev.puntos||0)*0.3):undefined;
+  const upd={nombre,celular,catNum,catVar,genero};
+  if(catChanged) upd.puntos=newPuntos;
+  db.ref('jugadores/'+editingJid).update(upd).then(()=>{
+    toast(catChanged?`Categoría cambiada · Puntos ajustados a ${newPuntos} (30%)`:'Jugador actualizado','ok');
     editingJid=null;
     document.getElementById('jn').value='';
     document.getElementById('jcel').value='';
@@ -1976,10 +1981,11 @@ function crearTorneo(){
   const nombre=document.getElementById('tnombre').value.trim();
   const tipo=document.getElementById('ttipo').value;
   const fecha=document.getElementById('tfecha').value;
+  const catNum=tipo==='cat'?parseInt(document.getElementById('tcat')?.value||6):null;
   if(!nombre){toast('Poné un nombre al torneo','error');return;}
   if(wipParejas.length<2){toast('Necesitás al menos 2 parejas','error');return;}
   const ref=db.ref('torneos').push();
-  const t={id:ref.key,nombre,tipo,fecha,
+  const t={id:ref.key,nombre,tipo,catNum,fecha,
     parejas:[...wipParejas],
     partidos:[],presentes:[],finalizado:false,fase:'Clasificación'};
   ref.set(t).then(()=>{
@@ -2594,20 +2600,28 @@ function finalizarTorneo(tid){
       const t=JSON.parse(JSON.stringify(torneos[tid])); normT(t);
       const ps=t.partidos||[];
       const updates={};
+      // Multiplicador: 100% si el jugador es de la misma cat del torneo; 30% en cualquier otro caso.
+      // Torneos suma: siempre 30% (equivale a los puntos de un torneo por cat).
+      const puntMult=jid=>{
+        if(t.tipo==='suma') return 0.3;
+        if(!t.catNum) return 1;
+        const j=jugadores[jid];
+        return (j&&j.catNum===t.catNum)?1:0.3;
+      };
+      const addPuntos=(jid,pts)=>{
+        if(!updates[jid]) updates[jid]={puntos:(jugadores[jid]?.puntos||0),torneosCount:(jugadores[jid]?.torneosCount||0)};
+        updates[jid].puntos+=Math.round(pts*puntMult(jid));
+      };
       // +1 por participar a todos
       (t.parejas||[]).forEach(par=>{
         [par.j1id,par.j2id].filter(Boolean).forEach(jid=>{
-          if(!updates[jid]) updates[jid]={puntos:(jugadores[jid]?.puntos||0),torneosCount:(jugadores[jid]?.torneosCount||0)};
-          updates[jid].puntos+=1;
+          addPuntos(jid,1);
           updates[jid].torneosCount+=1;
         });
       });
       const gp=(pIdx,bonus)=>{
         const par=(t.parejas||[])[pIdx]; if(!par) return;
-        [par.j1id,par.j2id].filter(Boolean).forEach(jid=>{
-          if(!updates[jid]) updates[jid]={puntos:(jugadores[jid]?.puntos||0),torneosCount:(jugadores[jid]?.torneosCount||0)};
-          updates[jid].puntos+=bonus;
-        });
+        [par.j1id,par.j2id].filter(Boolean).forEach(jid=>addPuntos(jid,bonus));
       };
       // Puntos por resultado eliminatorio
       const fin=ps.find(m=>m.fase==='Final'&&m.jugado);
