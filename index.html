@@ -343,6 +343,8 @@ a{color:var(--lime);text-decoration:none;}
 .btn-icon:hover{background:rgba(255,255,255,.1);color:var(--white);}
 .btn-wa{background:rgba(37,211,102,.15);color:#25D366;border:1px solid rgba(37,211,102,.25);}
 .btn-wa:hover{background:rgba(37,211,102,.25);}
+.btn-asc{background:rgba(251,191,36,.15);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}
+.btn-asc:hover{background:rgba(251,191,36,.28);}
 
 /* ─── INPUTS ───────────────────────────────────────────── */
 .form-group{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
@@ -1747,6 +1749,7 @@ function renderJugadores(){
             <div class="jug-actions">
               ${j.celular?`<a class="btn btn-wa btn-xs" href="https://wa.me/54${j.celular}" target="_blank">WhatsApp</a>`:''}
               <button class="btn btn-ghost btn-xs" onclick="editarJugador('${j.id}')">Editar</button>
+              ${j.catNum>1?`<button class="btn btn-asc btn-xs" onclick="ascenderJugador('${j.id}')">↑ Ascender</button>`:''}
               <button class="btn btn-red btn-xs" onclick="eliminarJugador('${j.id}')">✕</button>
             </div>
           </div>`).join('')}
@@ -1804,6 +1807,22 @@ function eliminarJugador(jid){
     `¿Eliminar a <b>${esc(jugadores[jid]?.nombre)}</b>?<br><small style="color:var(--gray)">Esta acción no se puede deshacer.</small>`,
     'Eliminar',
     ()=>db.ref('jugadores/'+jid).remove().then(()=>toast('Jugador eliminado','ok')).catch(()=>toast('Error al eliminar','error'))
+  );
+}
+
+function ascenderJugador(jid){
+  const j=jugadores[jid]; if(!j) return;
+  const newCat=j.catNum-1;
+  const newPuntos=Math.round((j.puntos||0)*0.3);
+  openModal(
+    '↑ Ascender jugador',
+    `<b>${esc(j.nombre)}</b> pasará de <b>${catLabel(j.catNum,j.catVar)}</b> a <b>${newCat}ª</b>.<br><br>
+     Sus puntos se ajustarán de <b>${j.puntos||0}</b> a <b>${newPuntos}</b> (30%).<br>
+     <small style="color:var(--gray)">Esta acción no se puede deshacer.</small>`,
+    '↑ Ascender',
+    ()=>db.ref('jugadores/'+jid).update({catNum:newCat,puntos:newPuntos})
+      .then(()=>toast(`${j.nombre} ascendido a ${newCat}ª · Puntos ajustados a ${newPuntos}`,'ok'))
+      .catch(()=>toast('Error al ascender','error'))
   );
 }
 
