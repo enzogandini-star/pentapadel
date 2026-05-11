@@ -889,13 +889,14 @@ input[type=file]{display:none;}
 }
 
 /* ─── TV BRACKET ──────────────────────────────────────── */
-.tv-bracket-wrap{
-  width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;
+.tv-butterfly-wrap{
+  width:100%;height:100%;display:flex;align-items:center;justify-content:center;
+  overflow:auto;padding:16px 8px;box-sizing:border-box;
 }
-.tv-bracket-inner{display:flex;align-items:center;transform-origin:center center;}
+.tv-butterfly-inner{display:flex;align-items:center;gap:6px;min-width:min-content;}
 .tv-bc{
   display:flex;flex-direction:column;justify-content:space-around;
-  width:220px;gap:10px;flex-shrink:0;
+  width:210px;gap:8px;flex-shrink:0;
 }
 .tv-bc-title{
   font-family:'Barlow Condensed',sans-serif;
@@ -911,19 +912,20 @@ input[type=file]{display:none;}
 .tv-bc-match.is-final{border-color:rgba(245,197,66,.45);box-shadow:0 0 24px rgba(245,197,66,.15);}
 .tv-bc-slot{
   display:flex;align-items:center;justify-content:space-between;
-  padding:11px 14px;min-height:42px;
+  padding:9px 12px;min-height:48px;
   border-bottom:1px solid rgba(255,255,255,.06);
-  font-size:14px;
 }
 .tv-bc-slot:last-child{border-bottom:none;}
 .tv-bc-slot.win{background:rgba(181,229,42,.13);}
-.tv-bc-slot .sn{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:170px;}
-.tv-bc-slot .sn.win-name{color:var(--lime);font-weight:700;}
-.tv-bc-slot .sn.loss-name{color:var(--gray);text-decoration:line-through;}
-.tv-bc-slot .sn.tbd-name{color:var(--gray);font-style:italic;font-weight:400;}
+.tv-bc-pair{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0;}
+.tv-pn{font-size:13px;font-weight:600;line-height:1.25;word-break:break-word;}
+.tv-pn2{font-size:11px;color:var(--gray2);line-height:1.2;word-break:break-word;}
+.tv-bc-pair.win-pair .tv-pn,.tv-bc-pair.win-pair .tv-pn2{color:var(--lime);}
+.tv-bc-pair.loss-pair .tv-pn,.tv-bc-pair.loss-pair .tv-pn2{color:var(--gray);text-decoration:line-through;}
+.tv-bc-nm{flex:1;font-size:13px;font-weight:600;color:var(--gray);font-style:italic;}
 .tv-bc-slot .sc{
   font-family:'Barlow Condensed',sans-serif;font-size:20px;
-  min-width:24px;text-align:right;margin-left:8px;color:var(--gray2);
+  min-width:24px;text-align:right;margin-left:8px;color:var(--gray2);flex-shrink:0;
 }
 .tv-bc-slot .sc.win-sc{color:var(--lime);font-weight:900;}
 .tv-bc-inp{
@@ -1411,7 +1413,7 @@ input[type=file]{display:none;}
 <!-- ════ TV OVERLAY ════ -->
 <div id="tv-overlay" style="display:none">
   <div class="tv-header">
-    <div class="tv-logo">🎾 PENTA<span style="color:var(--white)">PADEL</span></div>
+    <div class="tv-logo"><img src="data:image/jpeg;base64,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" style="height:38px;width:38px;object-fit:contain;border-radius:8px;display:block;"></div>
     <div id="tv-nombre" class="tv-nombre"></div>
     <div class="tv-header-right">
       <button class="tv-close" onclick="cerrarTV()">✕ Salir</button>
@@ -2930,7 +2932,6 @@ function renderTV(){
   } else {
     body.style.overflow='auto';
     body.innerHTML=buildTVBracket(t);
-    requestAnimationFrame(()=>drawBracketLines(t));
   }
   // Acciones en TV
   const actEl=document.getElementById('tv-actions');
@@ -3033,24 +3034,32 @@ function cancelarResTV(mid,tid){
 
 function buildTVBracket(t){
   const ps=t.partidos||[];
-  const rounds=[
-    {label:'Octavos',fase:'Octavos'},
-    {label:'Cuartos de Final',fase:'Cuartos'},
-    {label:'Semifinales',fase:'Semis'},
-    {label:'Final',fase:'Final'}
-  ].filter(r=>ps.some(m=>m.fase===r.fase));
-  const fin=ps.find(m=>m.fase==='Final'&&m.jugado);
-  const champion=fin?(fin.g1>fin.g2?fin.p1:fin.p2):null;
-  return `<div class="tv-bracket-wrap">
-    <div class="tv-bracket-inner" id="tv-bracket-inner">
-      ${rounds.filter(r=>r.fase!=='Final').map(r=>`
-        <div class="tv-bc">
-          <div class="tv-bc-title">${r.label}</div>
-          ${ps.filter(m=>m.fase===r.fase).map(m=>tvBcMatch(m,t)).join('')}
-        </div>`).join('')}
+  const elim=ps.filter(m=>m.fase!=='Clasificación');
+  if(!elim.length) return '<div class="empty-state"><div class="ei">🏆</div><p>Sin llaves aún</p></div>';
+  const fin=elim.find(m=>m.fase==='Final');
+  const sfAll=elim.filter(m=>m.fase==='Semis');
+  const sfL=sfAll.find(m=>m.nextSlot==='p1')||sfAll[0];
+  const sfR=sfAll.find(m=>m.nextSlot==='p2')||sfAll[1];
+  const qfAll=elim.filter(m=>m.fase==='Cuartos');
+  const qfsL=qfAll.filter(m=>sfL&&m.nextPid===sfL.id).sort((a,b)=>a.nextSlot==='p1'?-1:1);
+  const qfsR=qfAll.filter(m=>sfR&&m.nextPid===sfR.id).sort((a,b)=>a.nextSlot==='p1'?-1:1);
+  const octAll=elim.filter(m=>m.fase==='Octavos');
+  const octsL=qfsL.flatMap(qf=>octAll.filter(o=>o.nextPid===qf.id));
+  const octsR=qfsR.flatMap(qf=>octAll.filter(o=>o.nextPid===qf.id));
+  const champion=fin&&fin.jugado?(fin.g1>fin.g2?fin.p1:fin.p2):null;
+  const col=(label,matches)=>`
+    <div class="tv-bc">
+      <div class="tv-bc-title">${label}</div>
+      ${matches.map(m=>tvBcMatch(m,t)).join('')}
+    </div>`;
+  return `<div class="tv-butterfly-wrap">
+    <div class="tv-butterfly-inner">
+      ${octsL.length?col('Octavos',octsL):''}
+      ${qfsL.length?col('Cuartos',qfsL):''}
+      ${sfL?col('Semifinal',[sfL]):''}
       <div class="tv-center">
         <div class="tv-final-lbl">FINAL</div>
-        ${ps.filter(m=>m.fase==='Final').map(m=>tvBcMatch(m,t)).join('')}
+        ${fin?tvBcMatch(fin,t):''}
         ${champion!=null?`
           <div class="tv-champion">
             <div class="tv-champ-icon">🏆</div>
@@ -3058,25 +3067,34 @@ function buildTVBracket(t){
             <div class="tv-champ-name">${parLabel(t,champion)}</div>
           </div>`:''}
       </div>
+      ${sfR?col('Semifinal',[sfR]):''}
+      ${qfsR.length?col('Cuartos',qfsR):''}
+      ${octsR.length?col('Octavos',octsR):''}
     </div>
   </div>`;
 }
 
 function tvBcMatch(m,t){
-  const n1=m.p1!=null?parLabel(t,m.p1):'TBD';
-  const n2=m.p2!=null?parLabel(t,m.p2):'TBD';
-  const w1=m.jugado&&m.g1>m.g2, w2=m.jugado&&m.g2>m.g1;
+  const getPair=idx=>(idx!=null?(t.parejas||[])[idx]||null:null);
+  const par1=getPair(m.p1),par2=getPair(m.p2);
+  const w1=m.jugado&&m.g1>m.g2,w2=m.jugado&&m.g2>m.g1;
   const canLoad=!m.jugado&&m.p1!=null&&m.p2!=null;
-  const isSemi=m.fase==='Semis', isFin=m.fase==='Final';
-  return `<div class="tv-bc-match ${isSemi?'is-semi':''} ${isFin?'is-final':''}">
-    <div class="tv-bc-slot ${w1?'win':''}">
-      <span class="sn ${m.p1==null?'tbd-name':w1?'win-name':m.jugado?'loss-name':''}">${n1}</span>
-      ${m.jugado?`<span class="sc ${w1?'win-sc':''}">${m.g1}</span>`:''}
-    </div>
-    <div class="tv-bc-slot ${w2?'win':''}">
-      <span class="sn ${m.p2==null?'tbd-name':w2?'win-name':m.jugado?'loss-name':''}">${n2}</span>
-      ${m.jugado?`<span class="sc ${w2?'win-sc':''}">${m.g2}</span>`:''}
-    </div>
+  const isSemi=m.fase==='Semis',isFin=m.fase==='Final';
+  const slot=(par,isNull,w,sc)=>`
+    <div class="tv-bc-slot${w?' win':''}">
+      ${isNull
+        ?`<span class="tv-bc-nm">TBD</span>`
+        :par
+          ?`<div class="tv-bc-pair${w?' win-pair':m.jugado?' loss-pair':''}">
+              <span class="tv-pn">${esc(par.n1||'')}</span>
+              <span class="tv-pn tv-pn2">${esc(par.n2||'')}</span>
+            </div>`
+          :`<span class="tv-bc-nm">TBD</span>`}
+      ${m.jugado?`<span class="sc${w?' win-sc':''}">${sc}</span>`:''}
+    </div>`;
+  return `<div class="tv-bc-match${isSemi?' is-semi':''}${isFin?' is-final':''}">
+    ${slot(par1,m.p1==null,w1,m.g1)}
+    ${slot(par2,m.p2==null,w2,m.g2)}
     ${canLoad?`<div class="tv-bc-inp">
       <input class="tv-score-inp" id="tvb-${m.id}-1" type="number" min="0" placeholder="0">
       <span class="score-sep">—</span>
