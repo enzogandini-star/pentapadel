@@ -1093,6 +1093,71 @@ input[type=file]{display:none;}
   animation:tvglow 1s ease infinite alternate;
 }
 .section-sep{height:20px;}
+/* ═══════════════════════════════════════════════════════
+   MOBILE  (max-width: 767px)
+═══════════════════════════════════════════════════════ */
+@media(max-width:767px){
+  /* Hero */
+  .hero{padding:14px;gap:12px;}
+  .hero-logo{width:52px;height:52px;}
+  .hero-logo img{width:52px;height:52px;}
+  .hero-title{font-size:22px;}
+  .hero-frase{font-size:11px;}
+
+  /* Page titles */
+  .page-title{font-size:26px;}
+
+  /* Cards */
+  .card{padding:12px;}
+
+  /* Buttons — bigger touch target on xs */
+  .btn-xs{padding:6px 10px;font-size:11px;}
+
+  /* Player rows — wrap actions to second line */
+  .jug-row{flex-wrap:wrap;gap:8px;}
+  .jug-name{width:100%;flex:none;}
+  .jug-actions{width:100%;flex-wrap:wrap;gap:4px;}
+  .jug-actions .btn{flex:1 1 auto;justify-content:center;}
+
+  /* Player form — 1 column */
+  .jug-form-grid{grid-template-columns:1fr!important;}
+
+  /* Match rows — teams + inputs wrap cleanly */
+  .match-row{flex-direction:column;align-items:stretch;gap:6px;}
+  .match-team{font-size:13px;}
+  .match-inputs{justify-content:center;}
+
+  /* Score inputs — bigger touch area */
+  .score-input{width:52px;height:44px;padding:6px 4px;font-size:18px;}
+
+  /* Standings table — hide GF / GC columns */
+  .standings thead tr th:nth-child(5),
+  .standings thead tr th:nth-child(6),
+  .standings tbody tr td:nth-child(5),
+  .standings tbody tr td:nth-child(6){display:none;}
+
+  /* Bracket — tighter slots */
+  .brk-slot{min-height:100px;}
+  .brk-n1{font-size:12px;}
+  .brk-n2{font-size:10px;}
+  .brk-t{padding:8px 10px;}
+
+  /* Tournament detail header */
+  .detail-title{font-size:22px;}
+  .detail-header{flex-direction:column;gap:8px;}
+
+  /* Check-in grid — smaller min */
+  .checkin-grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));}
+
+  /* Builder padding */
+  .builder{padding:14px;}
+
+  /* Tabs */
+  .tab-btn{padding:8px 10px;font-size:12px;}
+
+  /* Ranking pts number */
+  .rank-pts{font-size:18px;}
+}
 </style>
 </head>
 <body>
