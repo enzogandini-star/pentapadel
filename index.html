@@ -1157,6 +1157,19 @@ input[type=file]{display:none;}
 
   /* Ranking pts number */
   .rank-pts{font-size:18px;}
+
+  /* TV bracket — touch zoom */
+  .tv-butterfly-wrap{touch-action:none;overflow:hidden;user-select:none;}
+  .tv-butterfly-inner{will-change:transform;}
+}
+
+/* TV header compacto en landscape mobile */
+@media(max-width:900px) and (orientation:landscape){
+  .tv-header{padding:6px 16px;}
+  .tv-nombre{font-size:18px;}
+  .tv-logo img{height:28px;width:28px;}
+  .tv-tabs{padding:0 12px 6px;}
+  .tv-tab{padding:5px 14px;font-size:11px;}
 }
 </style>
 </head>
@@ -2999,8 +3012,9 @@ function renderTV(){
     body.style.overflow='hidden';
     body.innerHTML=buildTVClasif(t);
   } else {
-    body.style.overflow='auto';
+    body.style.overflow='hidden';
     body.innerHTML=buildTVBracket(t);
+    if('ontouchstart' in window) requestAnimationFrame(initTVPinchZoom);
   }
   // Acciones en TV
   const actEl=document.getElementById('tv-actions');
@@ -3191,6 +3205,77 @@ function cargarResTVBracket(mid,tid){
     if(currentTid===tid) renderDetalle(tid);
     renderTV();
   }).catch(()=>toast('Error al guardar','error'));
+}
+
+// ─── TV PINCH ZOOM (mobile only) ───────────────
+function initTVPinchZoom(){
+  const wrap=document.querySelector('.tv-butterfly-wrap');
+  const inner=document.querySelector('.tv-butterfly-inner');
+  if(!wrap||!inner) return;
+
+  let sc=1,tx=0,ty=0;
+  let p0=null,sd0=0,sc0=1,tx0=0,ty0=0,mx0=0,my0=0;
+  let lastTap=0;
+
+  function apply(transition){
+    inner.style.transition=transition?'transform .22s ease':'none';
+    inner.style.transformOrigin='center center';
+    inner.style.transform=`translate(${tx}px,${ty}px) scale(${sc})`;
+  }
+
+  function fitScreen(){
+    inner.style.transform='none';
+    requestAnimationFrame(()=>{
+      const iw=inner.scrollWidth, ih=inner.scrollHeight;
+      const ww=wrap.clientWidth-16, wh=wrap.clientHeight-16;
+      sc=iw>ww||ih>wh ? Math.min(ww/iw, wh/ih)*0.95 : 1;
+      tx=0; ty=0;
+      apply(true);
+    });
+  }
+
+  // Auto-fit immediately and on orientation change
+  fitScreen();
+  const onOrient=()=>setTimeout(fitScreen,350);
+  window.addEventListener('orientationchange',onOrient);
+  // Cleanup old listener when wrap is replaced
+  wrap._cleanup=()=>window.removeEventListener('orientationchange',onOrient);
+
+  function dist(t){return Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);}
+  function midPt(t){return{x:(t[0].clientX+t[1].clientX)/2,y:(t[0].clientY+t[1].clientY)/2};}
+
+  wrap.addEventListener('touchstart',e=>{
+    const t=e.touches;
+    if(t.length===2){
+      e.preventDefault();
+      sd0=dist(t); sc0=sc; tx0=tx; ty0=ty;
+      const m=midPt(t); mx0=m.x; my0=m.y; p0='pinch';
+    } else if(t.length===1){
+      const now=Date.now();
+      if(now-lastTap<300){
+        e.preventDefault();
+        sc=1; tx=0; ty=0; apply(true);
+      }
+      lastTap=now;
+      if(sc>1){e.preventDefault(); mx0=t[0].clientX-tx; my0=t[0].clientY-ty; p0='pan';}
+    }
+  },{passive:false});
+
+  wrap.addEventListener('touchmove',e=>{
+    const t=e.touches;
+    if(t.length===2&&p0==='pinch'){
+      e.preventDefault();
+      sc=Math.max(0.25,Math.min(5,sc0*(dist(t)/sd0)));
+      const m=midPt(t); tx=tx0+(m.x-mx0); ty=ty0+(m.y-my0);
+      apply(false);
+    } else if(t.length===1&&p0==='pan'){
+      e.preventDefault();
+      tx=t[0].clientX-mx0; ty=t[0].clientY-my0;
+      apply(false);
+    }
+  },{passive:false});
+
+  wrap.addEventListener('touchend',e=>{if(e.touches.length<2) p0=e.touches.length===1?p0:null;});
 }
 
 // ─── BACKUP / RESTORE ──────────────────────────
