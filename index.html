@@ -856,6 +856,10 @@ input[type=file]{display:none;}
   font-family:'Barlow Condensed',sans-serif;
   font-size:18px;font-weight:900;color:var(--lime);
 }
+.tv-pos-dif{
+  font-family:'Barlow Condensed',sans-serif;
+  font-size:13px;font-weight:700;min-width:32px;text-align:right;flex-shrink:0;
+}
 .tv-match-row{
   display:flex;align-items:center;gap:8px;
   padding:10px 14px;border-bottom:1px solid var(--border);
@@ -2965,6 +2969,7 @@ function buildTVClasif(t){
               ${esc(r.par.n1)} / ${esc(r.par.n2)}
             </div>
             <div class="tv-pos-pts">${r.pts}</div>
+            ${(()=>{const d=r.gf-r.gc;return `<div class="tv-pos-dif" style="color:${d>0?'var(--lime)':d<0?'#f88':'var(--gray)'}">${d>0?'+':''}${d}</div>`;})()}
           </div>`).join('')}
       </div>
     </div>
