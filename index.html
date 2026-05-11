@@ -1821,7 +1821,34 @@ function ascenderJugador(jid){
      <small style="color:var(--gray)">Esta acción no se puede deshacer.</small>`,
     '↑ Ascender',
     ()=>db.ref('jugadores/'+jid).update({catNum:newCat,puntos:newPuntos})
-      .then(()=>toast(`${j.nombre} ascendido a ${newCat}ª · Puntos ajustados a ${newPuntos}`,'ok'))
+      .then(()=>{
+        const rivals=jArr().filter(p=>p.id!==jid&&p.catNum===newCat&&(p.puntos||0)>0);
+        const ranked=[...rivals,{...j,catNum:newCat,puntos:newPuntos}]
+          .filter(p=>(p.puntos||0)>0)
+          .sort((a,b)=>(b.puntos||0)-(a.puntos||0));
+        const pos=ranked.findIndex(p=>p.id===jid)+1;
+        const total=ranked.length;
+        openModal(
+          '¡Ascenso confirmado!',
+          `<div style="text-align:center;padding:8px 0">
+            <div style="font-size:36px;margin-bottom:10px">🏆</div>
+            <div style="font-size:19px;font-weight:700;margin-bottom:4px">${esc(j.nombre)}</div>
+            <div style="color:var(--gray);margin-bottom:20px">ascendió a <b style="color:var(--lime)">${newCat}ª categoría</b></div>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap">
+              <div style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:12px 20px">
+                <div style="font-size:10px;color:var(--gray);margin-bottom:4px;letter-spacing:.5px">PUNTOS</div>
+                <div style="font-size:24px;font-weight:700;color:var(--lime)">${newPuntos}</div>
+              </div>
+              <div style="background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;padding:12px 20px">
+                <div style="font-size:10px;color:var(--gray);margin-bottom:4px;letter-spacing:.5px">POSICIÓN</div>
+                <div style="font-size:24px;font-weight:700;color:var(--lime)">#${pos} <span style="font-size:13px;font-weight:400;color:var(--gray)">/ ${total}</span></div>
+              </div>
+            </div>
+          </div>`,
+          'Cerrar',
+          ()=>{}
+        );
+      })
       .catch(()=>toast('Error al ascender','error'))
   );
 }
