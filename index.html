@@ -1277,9 +1277,8 @@ input[type=file]{display:none;}
               <div class="form-group" style="margin-bottom:0" id="g-cat">
                 <label class="form-label">Categoría</label>
                 <select id="tcat" class="form-input" onchange="refreshJSelPanel()">
-                  <option value="0" selected>Todas</option>
                   <option value="3">Cat 3</option><option value="4">Cat 4</option><option value="5">Cat 5</option>
-                  <option value="6">Cat 6</option><option value="7">Cat 7</option>
+                  <option value="6" selected>Cat 6</option><option value="7">Cat 7</option>
                   <option value="8">Cat 8</option><option value="9">Cat 9</option>
                 </select>
               </div>
@@ -1891,7 +1890,6 @@ function refreshJSelPanel(){
   if(wipJ2id) usados.delete(wipJ2id);
   let ja=jArr().filter(j=>!usados.has(j.id));
   if(genVal!=='M') ja=ja.filter(j=>j.genero===genVal);
-  if(tipo==='cat'&&catVal>0)  ja=ja.filter(j=>j.catNum===catVal);
   if(tipo==='suma') ja=ja.filter(j=>j.catNum+(j.catVar==='-'?-1:j.catVar==='+'?1:0)<=sumaVal);
   if(q) ja=ja.filter(j=>j.nombre.toLowerCase().includes(q));
   ja.sort((a,b)=>a.nombre.localeCompare(b.nombre));
