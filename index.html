@@ -3257,7 +3257,7 @@ function initTVPinchZoom(){
         sc=1; tx=0; ty=0; apply(true);
       }
       lastTap=now;
-      if(sc>1){e.preventDefault(); mx0=t[0].clientX-tx; my0=t[0].clientY-ty; p0='pan';}
+      e.preventDefault(); mx0=t[0].clientX-tx; my0=t[0].clientY-ty; p0='pan';
     }
   },{passive:false});
 
