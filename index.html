@@ -2686,7 +2686,10 @@ function detectarOctavosSeguro(t){
   mB.g1=0;mB.g2=1;mB.jugado=true;
   const pA=computePairingInfo(tA);
   const pB=computePairingInfo(tB);
-  return pA.filter(a=>pB.some(b=>a.p1===b.p1&&a.p2===b.p2&&a.qi===b.qi&&a.sl===b.sl));
+  // Comparación sin orden: mismo par de equipos + mismo slot de cuadro
+  return pA.filter(a=>pB.some(b=>
+    ((a.p1===b.p1&&a.p2===b.p2)||(a.p1===b.p2&&a.p2===b.p1))&&a.qi===b.qi&&a.sl===b.sl
+  ));
 }
 
 function anticiparOctavos(tid){
