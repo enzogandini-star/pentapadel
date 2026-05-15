@@ -336,6 +336,8 @@ a{color:var(--lime);text-decoration:none;}
 .btn-red:hover{background:rgba(239,68,68,.25);}
 .btn-gold{background:rgba(245,197,66,.15);color:var(--gold);border:1px solid rgba(245,197,66,.25);}
 .btn-gold:hover{background:rgba(245,197,66,.25);}
+.btn-yellow{background:var(--gold);color:var(--navy);font-weight:700;}
+.btn-yellow:hover{filter:brightness(1.12);}
 .btn-sm{padding:6px 12px;font-size:12px;}
 .btn-xs{padding:4px 9px;font-size:11px;}
 .btn-full{width:100%;justify-content:center;}
@@ -2142,6 +2144,12 @@ function renderDetalle(tid){
   const dv=document.getElementById('torneos-detail-view');
   dv.style.display='';
   const hasElim=t.fase==='Eliminatoria';
+  const _pendCl=(t.partidos||[]).filter(m=>m.fase==='Clasificación'&&!m.jugado).length;
+  const _hasAntic=(t.partidos||[]).some(m=>m.fase==='Octavos'&&m.anticipado);
+  const _ntb=getTablaPos(t);const _nPI=Math.max(0,Math.min(_ntb.length,16)-8);
+  const _nOcts=(t.partidos||[]).filter(m=>m.fase==='Octavos').length;
+  const _brkFull=_nOcts>=_nPI&&(!_hasAntic||t.llavesCompletas);
+  const _canAntic=!hasElim&&_pendCl===1&&detectarOctavosSeguro(t).length>0;
   dv.innerHTML=`
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm detail-back" onclick="volverLista()">← Volver</button>
@@ -2156,9 +2164,11 @@ function renderDetalle(tid){
       ${!t.finalizado?`<button class="btn btn-gold btn-sm" onclick="openTV('${tid}')">📺 EN VIVO</button>`:''}
     </div>
     <div class="detail-actions" style="margin-bottom:14px">
-      ${!t.finalizado&&!hasElim?`<button class="btn btn-lime btn-sm" onclick="avanzarFase('${tid}')">⚡ Generar llaves</button>`:''}
-      ${!t.finalizado&&hasElim?`<button class="btn btn-lime btn-sm" onclick="finalizarTorneo('${tid}')">🏆 Finalizar torneo</button>`:''}
-      ${!t.finalizado&&hasElim?`<button class="btn btn-ghost btn-sm" onclick="repararLlaves('${tid}')" title="Corrige equipos propagados antes de tiempo">🔧 Reparar llaves</button>`:''}
+      ${!t.finalizado&&!hasElim&&!_canAntic?`<button class="btn btn-lime btn-sm" onclick="avanzarFase('${tid}')">⚡ Generar llaves</button>`:''}
+      ${!t.finalizado&&_canAntic?`<button class="btn btn-yellow btn-sm" onclick="anticiparOctavos('${tid}')">⏩ Anticipar octavos</button>`:''}
+      ${!t.finalizado&&hasElim&&_hasAntic&&!t.llavesCompletas&&_pendCl===0?`<button class="btn btn-lime btn-sm" onclick="avanzarFase('${tid}')">⚡ Completar llaves</button>`:''}
+      ${!t.finalizado&&hasElim&&_brkFull?`<button class="btn btn-lime btn-sm" onclick="finalizarTorneo('${tid}')">🏆 Finalizar torneo</button>`:''}
+      ${!t.finalizado&&hasElim&&_brkFull?`<button class="btn btn-ghost btn-sm" onclick="repararLlaves('${tid}')" title="Corrige equipos propagados antes de tiempo">🔧 Reparar llaves</button>`:''}
       <button class="btn btn-ghost btn-sm" onclick="abrirGestorParejas('${tid}')">👥 Parejas</button>
     </div>
     <div class="tabs" id="detail-tabs">
@@ -2492,6 +2502,7 @@ function clearElimChain(ps,pid){
 // ─── AVANZAR FASE (bracket generator) ──────────
 function avanzarFase(tid){
   const t=JSON.parse(JSON.stringify(torneos[tid])); normT(t);
+  if(t.partidos.some(m=>m.fase!=='Clasificación')){completarLlaves(t,tid);return;}
   const tabla=getTablaPos(t);
   const N=Math.min(tabla.length,16);
   if(N<2){toast('Necesitás al menos 2 parejas','error');return;}
@@ -2614,6 +2625,186 @@ function avanzarFase(tid){
   t.fase='Eliminatoria';
   db.ref('torneos/'+tid).set(t).then(()=>{
     toast('Llaves generadas','ok');
+    if(currentTid===tid) renderDetalle(tid);
+  }).catch(()=>toast('Error al guardar','error'));
+}
+
+// ─── EARLY OCTAVOS ─────────────────────────────
+function computePairingInfo(t){
+  const tabla=getTablaPos(t);
+  const N=Math.min(tabla.length,16);
+  if(N<2) return [];
+  const sorted=tabla.slice(0,N).map(r=>r.i);
+  const nPlayIn=Math.max(0,N-8);
+  const nByes=8-nPlayIn;
+  if(nPlayIn===0) return [];
+  const slotMap=[
+    {qi:0,sl:'p1'},{qi:3,sl:'p1'},{qi:1,sl:'p1'},{qi:2,sl:'p1'},
+    {qi:2,sl:'p2'},{qi:1,sl:'p2'},{qi:3,sl:'p2'},{qi:0,sl:'p2'}
+  ];
+  const playInTeams=sorted.slice(nByes,N);
+  const clasifPs=t.partidos.filter(m=>m.fase==='Clasificación'&&m.jugado);
+  function yaJugaron(a,b){return clasifPs.some(m=>(m.p1===a&&m.p2===b)||(m.p1===b&&m.p2===a));}
+  function allPairings(teams){
+    if(teams.length===0)return[[]];
+    const first=teams[0],rest=teams.slice(1),res=[];
+    rest.forEach((partner,idx)=>{
+      const rem=rest.filter((_,i)=>i!==idx);
+      allPairings(rem).forEach(sub=>res.push([[first,partner],...sub]));
+    });
+    return res;
+  }
+  let bestPairs=null,bestReps=Infinity,bestSeedDiff=-Infinity;
+  allPairings(playInTeams).forEach(pairing=>{
+    let reps=0,sd=0;
+    pairing.forEach(([a,b])=>{
+      if(yaJugaron(a,b))reps++;
+      sd+=Math.abs(playInTeams.indexOf(a)-playInTeams.indexOf(b));
+    });
+    if(reps<bestReps||(reps===bestReps&&sd>bestSeedDiff)){bestReps=reps;bestSeedDiff=sd;bestPairs=pairing;}
+  });
+  bestPairs.sort((pA,pB)=>
+    Math.min(playInTeams.indexOf(pA[0]),playInTeams.indexOf(pA[1]))-
+    Math.min(playInTeams.indexOf(pB[0]),playInTeams.indexOf(pB[1]))
+  );
+  return bestPairs.map(([a,b],i)=>{
+    const{qi,sl}=slotMap[nByes+i];
+    const posA=playInTeams.indexOf(a),posB=playInTeams.indexOf(b);
+    return{p1:posA<posB?a:b,p2:posA<posB?b:a,qi,sl};
+  });
+}
+
+function detectarOctavosSeguro(t){
+  const pending=(t.partidos||[]).filter(m=>m.fase==='Clasificación'&&!m.jugado);
+  if(pending.length!==1) return [];
+  const pm=pending[0];
+  const tA=JSON.parse(JSON.stringify(t));
+  const mA=tA.partidos.find(m=>m.id===pm.id);
+  mA.g1=1;mA.g2=0;mA.jugado=true;
+  const tB=JSON.parse(JSON.stringify(t));
+  const mB=tB.partidos.find(m=>m.id===pm.id);
+  mB.g1=0;mB.g2=1;mB.jugado=true;
+  const pA=computePairingInfo(tA);
+  const pB=computePairingInfo(tB);
+  // Comparación sin orden: mismo par de equipos + mismo slot de cuadro
+  return pA.filter(a=>pB.some(b=>
+    ((a.p1===b.p1&&a.p2===b.p2)||(a.p1===b.p2&&a.p2===b.p1))&&a.qi===b.qi&&a.sl===b.sl
+  ));
+}
+
+function anticiparOctavos(tid){
+  const t=JSON.parse(JSON.stringify(torneos[tid])); normT(t);
+  if(t.partidos.some(m=>m.fase!=='Clasificación')){toast('Ya existen llaves generadas','error');return;}
+  const safe=detectarOctavosSeguro(t);
+  if(!safe.length){toast('No hay octavos seguros anticipables','info');return;}
+  const finId=uid(),sfIds=[uid(),uid()],qfIds=[uid(),uid(),uid(),uid()];
+  const ps=[];
+  ps.push({id:finId,fase:'Final',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:null,nextSlot:null,tbd:true});
+  ps.push({id:sfIds[0],fase:'Semis',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:finId,nextSlot:'p1',tbd:true});
+  ps.push({id:sfIds[1],fase:'Semis',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:finId,nextSlot:'p2',tbd:true});
+  ps.push({id:qfIds[0],fase:'Cuartos',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:sfIds[0],nextSlot:'p1',tbd:true});
+  ps.push({id:qfIds[1],fase:'Cuartos',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:sfIds[1],nextSlot:'p1',tbd:true});
+  ps.push({id:qfIds[2],fase:'Cuartos',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:sfIds[0],nextSlot:'p2',tbd:true});
+  ps.push({id:qfIds[3],fase:'Cuartos',p1:null,p2:null,g1:null,g2:null,jugado:false,nextPid:sfIds[1],nextSlot:'p2',tbd:true});
+  safe.forEach(({p1,p2,qi,sl})=>{
+    ps.push({id:uid(),fase:'Octavos',p1,p2,g1:null,g2:null,jugado:false,
+      nextPid:qfIds[qi],nextSlot:sl,tbd:false,anticipado:true});
+  });
+  t.partidos=[...t.partidos,...ps];
+  t.fase='Eliminatoria';
+  db.ref('torneos/'+tid).set(t).then(()=>{
+    toast(`${safe.length} octavo${safe.length>1?'s':''} anticipado${safe.length>1?'s':''} generado${safe.length>1?'s':''}`,'ok');
+    if(currentTid===tid) renderDetalle(tid);
+  }).catch(()=>toast('Error al guardar','error'));
+}
+
+function completarLlaves(t,tid){
+  const tabla=getTablaPos(t);
+  const N=Math.min(tabla.length,16);
+  const sorted=tabla.slice(0,N).map(r=>r.i);
+  const nPlayIn=Math.max(0,N-8);
+  const nByes=8-nPlayIn;
+  const slotMap=[
+    {qi:0,sl:'p1'},{qi:3,sl:'p1'},{qi:1,sl:'p1'},{qi:2,sl:'p1'},
+    {qi:2,sl:'p2'},{qi:1,sl:'p2'},{qi:3,sl:'p2'},{qi:0,sl:'p2'}
+  ];
+  const finM=t.partidos.find(m=>m.fase==='Final');
+  const sfAll=t.partidos.filter(m=>m.fase==='Semis');
+  const qfAll=t.partidos.filter(m=>m.fase==='Cuartos');
+  if(!finM||sfAll.length<2||qfAll.length<4){toast('Estructura de llaves inválida','error');return;}
+  const sfL=sfAll.find(s=>s.nextSlot==='p1'),sfR=sfAll.find(s=>s.nextSlot==='p2');
+  const sfIds=[sfL.id,sfR.id];
+  const qfIds=[
+    qfAll.find(q=>q.nextPid===sfIds[0]&&q.nextSlot==='p1')?.id,
+    qfAll.find(q=>q.nextPid===sfIds[1]&&q.nextSlot==='p1')?.id,
+    qfAll.find(q=>q.nextPid===sfIds[0]&&q.nextSlot==='p2')?.id,
+    qfAll.find(q=>q.nextPid===sfIds[1]&&q.nextSlot==='p2')?.id,
+  ];
+  if(qfIds.some(id=>!id)){toast('Estructura de cuartos inválida','error');return;}
+  const ps=[...t.partidos];
+  for(let i=0;i<nByes&&i<sorted.length;i++){
+    const{qi,sl}=slotMap[i];
+    const qfi=ps.findIndex(m=>m.id===qfIds[qi]);
+    if(qfi>=0) ps[qfi]={...ps[qfi],[sl]:sorted[i],tbd:false};
+  }
+  const anticipados=t.partidos.filter(m=>m.fase==='Octavos'&&m.anticipado);
+  const usedTeams=new Set();
+  anticipados.forEach(m=>{usedTeams.add(m.p1);usedTeams.add(m.p2);});
+  const playInTeams=sorted.slice(nByes,N);
+  const remaining=playInTeams.filter(team=>!usedTeams.has(team));
+  if(remaining.length>0){
+    const takenSlots=new Set(anticipados.map(m=>`${m.nextPid}:${m.nextSlot}`));
+    const freeSlots=[];
+    for(let i=0;i<nPlayIn;i++){
+      const{qi,sl}=slotMap[nByes+i];
+      if(!takenSlots.has(`${qfIds[qi]}:${sl}`)) freeSlots.push({qi,sl,qid:qfIds[qi]});
+    }
+    const clasifPs=t.partidos.filter(m=>m.fase==='Clasificación'&&m.jugado);
+    function yaJugaron(a,b){return clasifPs.some(m=>(m.p1===a&&m.p2===b)||(m.p1===b&&m.p2===a));}
+    function allPairings(teams){
+      if(teams.length===0)return[[]];
+      const first=teams[0],rest=teams.slice(1),res=[];
+      rest.forEach((partner,idx)=>{
+        const rem=rest.filter((_,i)=>i!==idx);
+        allPairings(rem).forEach(sub=>res.push([[first,partner],...sub]));
+      });
+      return res;
+    }
+    let bestPairs=null,bestReps=Infinity,bestSeedDiff=-Infinity;
+    allPairings(remaining).forEach(pairing=>{
+      let reps=0,sd=0;
+      pairing.forEach(([a,b])=>{
+        if(yaJugaron(a,b))reps++;
+        sd+=Math.abs(remaining.indexOf(a)-remaining.indexOf(b));
+      });
+      if(reps<bestReps||(reps===bestReps&&sd>bestSeedDiff)){bestReps=reps;bestSeedDiff=sd;bestPairs=pairing;}
+    });
+    if(bestReps>0) toast(`⚠️ ${bestReps} partido${bestReps>1?'s':''} de octavos repite rival`,'info');
+    bestPairs.sort((pA,pB)=>
+      Math.min(remaining.indexOf(pA[0]),remaining.indexOf(pA[1]))-
+      Math.min(remaining.indexOf(pB[0]),remaining.indexOf(pB[1]))
+    );
+    bestPairs.forEach(([a,b],i)=>{
+      const{qid,sl}=freeSlots[i];
+      const posA=remaining.indexOf(a),posB=remaining.indexOf(b);
+      const p1=posA<posB?a:b,p2=posA<posB?b:a;
+      ps.push({id:uid(),fase:'Octavos',p1,p2,g1:null,g2:null,jugado:false,
+        nextPid:qid,nextSlot:sl,tbd:false});
+    });
+  }
+  const qfsConOct=new Set();
+  ps.filter(m=>m.fase==='Octavos').forEach(m=>qfsConOct.add(m.nextPid));
+  ps.forEach(m=>{
+    if(m.fase!=='Cuartos') return;
+    if(m.jugado||m.nextPid==null) return;
+    if(qfsConOct.has(m.id)) return;
+    if(m.p1!==null&&m.p2===null) propagateWinner(ps,m,m.p1);
+    else if(m.p2!==null&&m.p1===null) propagateWinner(ps,m,m.p2);
+  });
+  t.partidos=ps;
+  t.llavesCompletas=true;
+  db.ref('torneos/'+tid).set(t).then(()=>{
+    toast('Llaves completadas','ok');
     if(currentTid===tid) renderDetalle(tid);
   }).catch(()=>toast('Error al guardar','error'));
 }
@@ -3019,10 +3210,24 @@ function renderTV(){
   }
   // Acciones en TV
   const actEl=document.getElementById('tv-actions');
-  if(actEl) actEl.innerHTML=!t.finalizado&&t.fase==='Clasificación'
-    ?`<button class="btn btn-lime btn-sm" onclick="avanzarFase('${tvTid}')">⚡ Generar llaves</button>`
-    :!t.finalizado&&t.fase==='Eliminatoria'
-    ?`<button class="btn btn-lime btn-sm" onclick="finalizarTorneo('${tvTid}')">🏆 Finalizar</button>`:'';
+  if(actEl){
+    const _tvPend=(t.partidos||[]).filter(m=>m.fase==='Clasificación'&&!m.jugado).length;
+    const _tvAntic=(t.partidos||[]).some(m=>m.fase==='Octavos'&&m.anticipado);
+    const _tvNtb=getTablaPos(t);const _tvNPI=Math.max(0,Math.min(_tvNtb.length,16)-8);
+    const _tvFull=(t.partidos||[]).filter(m=>m.fase==='Octavos').length>=_tvNPI&&(!_tvAntic||t.llavesCompletas);
+    const _tvCanAntic=t.fase==='Clasificación'&&_tvPend===1&&detectarOctavosSeguro(t).length>0;
+    actEl.innerHTML=!t.finalizado?(
+      _tvCanAntic
+        ?`<button class="btn btn-yellow btn-sm" onclick="anticiparOctavos('${tvTid}')">⏩ Anticipar octavos</button>`
+      :t.fase==='Clasificación'
+        ?`<button class="btn btn-lime btn-sm" onclick="avanzarFase('${tvTid}')">⚡ Generar llaves</button>`
+      :_tvAntic&&!t.llavesCompletas&&_tvPend===0
+        ?`<button class="btn btn-lime btn-sm" onclick="avanzarFase('${tvTid}')">⚡ Completar llaves</button>`
+      :_tvFull
+        ?`<button class="btn btn-lime btn-sm" onclick="finalizarTorneo('${tvTid}')">🏆 Finalizar</button>`
+      :''
+    ):'';
+  }
 }
 
 function buildTVClasif(t){
